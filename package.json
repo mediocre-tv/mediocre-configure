@@ -9,6 +9,9 @@
     "eslint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "prettier": "npx prettier -c '{**/*,*}.{js,ts,jsx,tsx,css}'",
     "lint": "conc -c auto npm:prettier npm:eslint",
+    "eslint-fix": "eslint . --ext ts,tsx --fix",
+    "prettier-fix": "npx prettier -w '{**/*,*}.{js,ts,jsx,tsx,css}'",
+    "lint-fix": "npm run eslint-fix && npm run prettier-fix",
     "preview": "vite preview"
   },
   "dependencies": {
