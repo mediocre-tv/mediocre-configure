@@ -8,6 +8,8 @@ import { useState } from "react";
 import { Position } from "../shapes/Position.ts";
 import { v4 as uuid } from "uuid";
 import { DraggableRect, StandardRect } from "./KonvaRect.tsx";
+import Konva from "konva";
+import KonvaEventObject = Konva.KonvaEventObject;
 
 interface ImageLayerCrosshairsProps {
   mousePosition: Position;
@@ -29,61 +31,31 @@ function ImageLayerCrosshairs({
 interface ImageLayerProps {
   image: HTMLImageElement;
   dimensions: Dimensions;
-  addRectangle: (rectangle: Rectangle) => void;
+  mousePosition: Position | null;
+  hideCrosshairs: boolean;
+  onMouseDown: () => void;
 }
 
-function ImageLayer({ image, dimensions, addRectangle }: ImageLayerProps) {
-  const [mousePosition, setMousePosition] = useState<Position | null>(null);
-
-  const [rectangleStartPosition, setRectangleStartPosition] =
-    useState<Position | null>(null);
-  const isDrawing = mousePosition && rectangleStartPosition;
-
-  let rectangle: Rectangle | null;
-  if (isDrawing) {
-    const width = mousePosition.x - rectangleStartPosition.x;
-    const height = mousePosition.y - rectangleStartPosition.y;
-    rectangle = {
-      x: width > 0 ? rectangleStartPosition.x : mousePosition.x,
-      y: height > 0 ? rectangleStartPosition.y : mousePosition.y,
-      width: Math.abs(width),
-      height: Math.abs(height),
-    };
-  } else {
-    rectangle = null;
-  }
-
+function ImageLayer({
+  image,
+  dimensions,
+  mousePosition,
+  hideCrosshairs,
+  onMouseDown,
+}: ImageLayerProps) {
   return (
-    <Layer
-      onMouseDown={() => {
-        setRectangleStartPosition(mousePosition);
-      }}
-      onMouseUp={() => {
-        if (rectangle && rectangle.width > 10 && rectangle.height > 10) {
-          addRectangle(rectangle);
-        }
-        setRectangleStartPosition(null);
-      }}
-      onMouseOver={({ evt }) =>
-        setMousePosition({ x: evt.offsetX, y: evt.offsetY })
-      }
-      onMouseMove={({ evt }) =>
-        setMousePosition({ x: evt.offsetX, y: evt.offsetY })
-      }
-      onMouseLeave={() => setMousePosition(null)}
-    >
+    <Layer onMouseDown={onMouseDown}>
       <Image
         image={image}
         width={dimensions.width}
         height={dimensions.height}
       />
-      {mousePosition && (
+      {mousePosition && !hideCrosshairs && (
         <ImageLayerCrosshairs
           mousePosition={mousePosition}
           dimensions={dimensions}
         />
       )}
-      {rectangle !== null && <StandardRect rectangle={rectangle} />}
     </Layer>
   );
 }
@@ -147,12 +119,39 @@ function RectanglesLayer({
   );
 }
 
+interface DrawRectangleLayerProps {
+  rectangle: Rectangle | null;
+}
+
+function DrawRectangleLayer({ rectangle }: DrawRectangleLayerProps) {
+  return (
+    <Layer>
+      {rectangle !== null && <StandardRect rectangle={rectangle} />}
+    </Layer>
+  );
+}
+
+function rectangleIsValid(rectangle: Rectangle | null): rectangle is Rectangle {
+  return rectangle !== null && rectangle.width > 10 && rectangle.height > 10;
+}
+
 interface ImageLabellerWindowProps {
   image: HTMLImageElement;
   rectangles: Rectangles;
   setRectangles: (rectangles: Rectangles) => void;
   selectedRectangleId: string | null;
   setSelectedRectangleId: (id: string | null) => void;
+}
+
+function getRectangle(start: Position, end: Position) {
+  const width = end.x - start.x;
+  const height = end.y - start.y;
+  return {
+    x: width > 0 ? start.x : end.x,
+    y: height > 0 ? start.y : end.y,
+    width: Math.abs(width),
+    height: Math.abs(height),
+  };
 }
 
 function ImageLabellerWindow({
@@ -164,9 +163,29 @@ function ImageLabellerWindow({
 }: ImageLabellerWindowProps) {
   const { ref, dimensions, scale: _ } = useImageContainer(image);
 
+  const [mousePosition, setMousePosition] = useState<Position | null>(null);
   const [rectanglesCursor, setRectanglesCursor] = useState<string | null>(null);
+  const mouseOverRectangles = !!rectanglesCursor;
 
-  const cursor = rectanglesCursor ? rectanglesCursor : "none";
+  const [rectangleStartPosition, setRectangleStartPosition] =
+    useState<Position | null>(null);
+  const isDrawing = mousePosition !== null && rectangleStartPosition !== null;
+
+  const cursor = mouseOverRectangles && !isDrawing ? rectanglesCursor : "none";
+
+  const rectangle = isDrawing
+    ? getRectangle(rectangleStartPosition, mousePosition)
+    : null;
+
+  const onStageMouseUp = () => {
+    if (rectangleIsValid(rectangle)) {
+      setRectangles({ ...rectangles, [uuid()]: rectangle });
+    }
+    setRectangleStartPosition(null);
+  };
+  const resetMousePosition = () => setMousePosition(null);
+  const setMousePositionFromEvent = ({ evt }: KonvaEventObject<MouseEvent>) =>
+    setMousePosition({ x: evt.offsetX, y: evt.offsetY });
 
   return (
     <div className={styles.stageContainer} ref={ref}>
@@ -177,13 +196,17 @@ function ImageLabellerWindow({
           width={dimensions.width}
           height={dimensions.height}
           style={{ cursor: cursor }}
+          onMouseOver={setMousePositionFromEvent}
+          onMouseMove={setMousePositionFromEvent}
+          onMouseLeave={resetMousePosition}
+          onMouseUp={onStageMouseUp}
         >
           <ImageLayer
             image={image}
             dimensions={dimensions}
-            addRectangle={(rectangle) => {
-              setRectangles({ ...rectangles, [uuid()]: rectangle });
-            }}
+            mousePosition={mousePosition}
+            hideCrosshairs={mouseOverRectangles && !isDrawing}
+            onMouseDown={() => setRectangleStartPosition(mousePosition)}
           />
           <RectanglesLayer
             rectangles={rectangles}
@@ -193,6 +216,7 @@ function ImageLabellerWindow({
             boundary={dimensions}
             setRectanglesCursor={setRectanglesCursor}
           />
+          <DrawRectangleLayer rectangle={rectangle} />
         </Stage>
       )}
     </div>
