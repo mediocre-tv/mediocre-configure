@@ -1,11 +1,13 @@
-﻿import { Rect } from "react-konva";
+﻿import { Group, Rect } from "react-konva";
 import Konva from "konva";
-import RectConfig = Konva.RectConfig;
 import { Rectangle } from "../shapes/Rectangle.tsx";
 import { KonvaNodeEvents } from "react-konva/ReactKonvaCore";
+import { Dimensions } from "./Dimensions.ts";
+import { Position } from "../shapes/Position.ts";
+import RectConfig = Konva.RectConfig;
 import KonvaEventObject = Konva.KonvaEventObject;
 import Vector2d = Konva.Vector2d;
-import { Dimensions } from "./Dimensions.ts";
+import NodeConfig = Konva.NodeConfig;
 
 interface StandardRectProps {
   rectangle: Rectangle;
@@ -28,7 +30,7 @@ function getStandardRectProps(rectangle: Rectangle): RectConfig {
   };
 }
 
-function getSelectableRectProps(onSelect: () => void): KonvaNodeEvents {
+function getSelectableNodeProps(onSelect: () => void): KonvaNodeEvents {
   return {
     onMouseDown: onSelect,
     onClick: onSelect,
@@ -36,45 +38,12 @@ function getSelectableRectProps(onSelect: () => void): KonvaNodeEvents {
   };
 }
 
-interface DraggableRectProps {
-  rectangle: Rectangle;
-  onSelect: () => void;
-  setRectangle: (rectangle: Rectangle) => void;
-  setMouseOverRectangle: (mouseOverRectangle: boolean) => void;
-  setIsDragging: (isDragging: boolean) => void;
-  boundary: Dimensions;
-}
-
-export function DraggableRect({
-  rectangle,
-  onSelect,
-  setRectangle,
-  setMouseOverRectangle,
-  setIsDragging,
-  boundary,
-}: DraggableRectProps) {
-  return (
-    <Rect
-      {...getStandardRectProps(rectangle)}
-      {...getSelectableRectProps(onSelect)}
-      {...getDraggableRectProps(
-        rectangle,
-        (x: number, y: number) => setRectangle({ ...rectangle, x: x, y: y }),
-        setIsDragging,
-        boundary,
-      )}
-      onMouseEnter={() => setMouseOverRectangle(true)}
-      onMouseLeave={() => setMouseOverRectangle(false)}
-    />
-  );
-}
-
-function getDraggableRectProps(
+function getDraggableNodeProps(
   rectangle: Rectangle,
   setRectanglePosition: (x: number, y: number) => void,
   setIsDragging: (isDragging: boolean) => void,
   boundary: Dimensions,
-): RectConfig & KonvaNodeEvents {
+): NodeConfig & KonvaNodeEvents {
   return {
     draggable: true,
     onMouseDown() {
@@ -100,4 +69,78 @@ function getDraggableRectProps(
       };
     },
   };
+}
+
+interface TransformableRectProps {
+  rectangle: Rectangle;
+  setRectangle: (rectangle: Rectangle) => void;
+  startRedrawingRectangle: (startPosition: Position) => void;
+  onSelect: () => void;
+  setCursor: (cursor: string | null) => void;
+  boundary: Dimensions;
+}
+
+export function TransformableRect({
+  rectangle,
+  setRectangle,
+  startRedrawingRectangle,
+  onSelect,
+  setCursor,
+  boundary,
+}: TransformableRectProps) {
+  const handleSize = 7;
+  const { height, width, x, y } = rectangle;
+
+  const ResizeCorner = ({
+    cursor,
+    corner,
+    oppositePoint,
+  }: {
+    cursor: string;
+    corner: Position;
+    oppositePoint: Position;
+  }) => (
+    <Rect
+      x={corner.x - handleSize / 2}
+      y={corner.y - handleSize / 2}
+      width={handleSize}
+      height={handleSize}
+      hitStrokeWidth={handleSize}
+      onMouseDown={() => startRedrawingRectangle(oppositePoint)}
+      onMouseEnter={() => setCursor(cursor)}
+    />
+  );
+
+  const corners = [
+    { direction: "nw", corner: { x: x, y: y } },
+    { direction: "ne", corner: { x: x + width, y: y } },
+    { direction: "se", corner: { x: x + width, y: y + height } },
+    { direction: "sw", corner: { x: x, y: y + height } },
+  ];
+
+  return (
+    <Group>
+      <Rect
+        {...getStandardRectProps(rectangle)}
+        {...getSelectableNodeProps(onSelect)}
+        {...getDraggableNodeProps(
+          rectangle,
+          (x: number, y: number) => setRectangle({ ...rectangle, x: x, y: y }),
+          (isDragging) =>
+            isDragging ? setCursor("grabbing") : setCursor("pointer"),
+          boundary,
+        )}
+        onMouseEnter={() => setCursor("pointer")}
+      />
+      {corners.map(({ direction, corner }, index) => (
+        <ResizeCorner
+          cursor={`${direction}-resize`}
+          corner={corner}
+          oppositePoint={
+            corners[(index + corners.length / 2) % corners.length].corner
+          }
+        />
+      ))}
+    </Group>
+  );
 }
