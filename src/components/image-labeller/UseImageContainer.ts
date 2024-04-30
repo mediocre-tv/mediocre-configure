@@ -1,5 +1,5 @@
 ﻿import { useMeasure } from "react-use";
-import { Dimensions } from "./Dimensions.ts";
+import { Dimensions } from "../shapes/Dimensions.ts";
 import { UseMeasureRef } from "react-use/lib/useMeasure";
 
 interface useImageContainerReturns {

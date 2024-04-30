@@ -2,7 +2,7 @@
 import Konva from "konva";
 import { Rectangle } from "../shapes/Rectangle.tsx";
 import { KonvaNodeEvents } from "react-konva/ReactKonvaCore";
-import { Dimensions } from "./Dimensions.ts";
+import { Dimensions } from "../shapes/Dimensions.ts";
 import { Position } from "../shapes/Position.ts";
 import RectConfig = Konva.RectConfig;
 import KonvaEventObject = Konva.KonvaEventObject;

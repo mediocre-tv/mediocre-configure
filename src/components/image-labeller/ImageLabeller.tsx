@@ -2,7 +2,7 @@ import { Rectangle, Rectangles } from "../shapes/Rectangle.tsx";
 import useImage from "use-image";
 import styles from "./ImageLabeller.module.css";
 import useImageContainer from "./UseImageContainer.ts";
-import { Dimensions } from "./Dimensions.ts";
+import { Dimensions } from "../shapes/Dimensions.ts";
 import { Image, Layer, Line, Stage } from "react-konva";
 import { useState } from "react";
 import { Position } from "../shapes/Position.ts";
