@@ -313,38 +313,32 @@ interface ImageLabellerProps {
   image: string;
   rectangles: Rectangles;
   setRectangles: (rectangles: Rectangles) => void;
+  selectedRectangleId: string | null;
+  setSelectedRectangleId: (id: string | null) => void;
 }
 
 export default function ImageLabeller({
   image,
   rectangles,
   setRectangles,
+  selectedRectangleId,
+  setSelectedRectangleId,
 }: ImageLabellerProps) {
   const [canvasImage, canvasImageStatus] = useImage(image);
-  const [selectedRectangleId, setSelectedRectangleId] = useState<string | null>(
-    null,
-  );
 
   return (
-    <>
-      <div className={styles.container}>
-        {canvasImage ? (
-          <ScaledImageLabellerWindowContainer
-            image={canvasImage}
-            rectangles={rectangles}
-            setRectangles={setRectangles}
-            selectedRectangleId={selectedRectangleId}
-            setSelectedRectangleId={setSelectedRectangleId}
-          />
-        ) : (
-          <div className={styles.imageStatus}>{canvasImageStatus}</div>
-        )}
-      </div>
-      <div>
-        Selected rectangle: {selectedRectangleId}{" "}
-        {selectedRectangleId &&
-          `: ${JSON.stringify(rectangles[selectedRectangleId])}`}
-      </div>
-    </>
+    <div className={styles.container}>
+      {canvasImage ? (
+        <ScaledImageLabellerWindowContainer
+          image={canvasImage}
+          rectangles={rectangles}
+          setRectangles={setRectangles}
+          selectedRectangleId={selectedRectangleId}
+          setSelectedRectangleId={setSelectedRectangleId}
+        />
+      ) : (
+        <div className={styles.imageStatus}>{canvasImageStatus}</div>
+      )}
+    </div>
   );
 }
