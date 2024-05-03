@@ -134,6 +134,7 @@ export function TransformableRect({
       />
       {corners.map(({ direction, corner }, index) => (
         <ResizeCorner
+          key={direction}
           cursor={`${direction}-resize`}
           corner={corner}
           oppositePoint={
