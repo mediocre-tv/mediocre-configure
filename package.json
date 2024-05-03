@@ -15,6 +15,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@protobuf-ts/grpcweb-transport": "^2.9.4",
     "@types/uuid": "^9.0.8",
     "classnames": "^2.5.1",
     "konva": "^9.3.3",
