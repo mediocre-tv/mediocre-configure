@@ -6,7 +6,7 @@ import styles from "./App.module.css";
 import { useState } from "react";
 import GrpcConfig from "../grpc/GrpcConfig.tsx";
 import { GrpcContextProps, GrpcProvider } from "../grpc/GrpcProvider.tsx";
-import { StyledEngineProvider } from "@mui/material";
+import AppProviders from "../app-providers/AppProviders.tsx";
 
 function App() {
   const [rectangles, setRectangles] = useLocalState<Rectangles>({}, "regions");
@@ -17,7 +17,7 @@ function App() {
   const [grpcContext, setGrpcContext] = useState<GrpcContextProps | null>(null);
 
   return (
-    <StyledEngineProvider injectFirst>
+    <AppProviders>
       <div className={styles.container}>
         {!grpcContext && (
           <GrpcConfig context={grpcContext} setContext={setGrpcContext} />
@@ -37,7 +37,7 @@ function App() {
             `: ${JSON.stringify(rectangles[selectedRectangleId])}`}
         </div>
       </div>
-    </StyledEngineProvider>
+    </AppProviders>
   );
 }
 
