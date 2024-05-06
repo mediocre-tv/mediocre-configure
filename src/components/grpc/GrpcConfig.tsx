@@ -1,10 +1,10 @@
-import { GrpcContextProps } from "./GrpcProvider.tsx";
 import { FormEvent, useEffect, useState } from "react";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
 import { HealthClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/grpc/health/v1/health_pb.client";
 import { HealthCheckResponse_ServingStatus } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/grpc/health/v1/health_pb";
 import { Alert, Stack, TextField } from "@mui/material";
 import ProgressButton from "../progress-button/ProgressButton.tsx";
+import { GrpcContextProps } from "./GrpcContext.tsx";
 
 const defaultContext = { baseUrl: "http://localhost:50050" };
 
@@ -17,7 +17,7 @@ function isErrorWithMessage(error: unknown): error is Error {
   );
 }
 
-export async function checkHealth(context: GrpcContextProps) {
+async function checkHealth(context: GrpcContextProps) {
   const transport = new GrpcWebFetchTransport({
     baseUrl: context.baseUrl,
   });
@@ -79,7 +79,7 @@ function GrpcConfig({ context, setContext }: GrpcConfigProps) {
         );
       }
     }
-  }, [context]);
+  }, [context, setContext]);
 
   let newContext: GrpcContextProps | null = null;
   if (url) {

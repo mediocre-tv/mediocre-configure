@@ -5,12 +5,13 @@ import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
 import styles from "./App.module.css";
 import { useState } from "react";
 import GrpcConfig from "../grpc/GrpcConfig.tsx";
-import { GrpcContextProps, GrpcProvider } from "../grpc/GrpcProvider.tsx";
 import AppProviders from "../app-providers/AppProviders.tsx";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import GrpcProvider from "../grpc/GrpcProvider.tsx";
+import { GrpcContextProps } from "../grpc/GrpcContext.tsx";
 
 function App() {
   const [rectangles, setRectangles] = useLocalState<Rectangles>({}, "regions");
