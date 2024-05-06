@@ -5,6 +5,7 @@ import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
 import styles from "./App.module.css";
 import { useState } from "react";
 import GrpcConfig from "../grpc/GrpcConfig.tsx";
+import { GrpcContextProps, GrpcProvider } from "../grpc/GrpcProvider.tsx";
 
 function App() {
   const [rectangles, setRectangles] = useLocalState<Rectangles>({}, "regions");
@@ -16,16 +17,18 @@ function App() {
 
   return (
     <div className={styles.container}>
-      <ImageLabeller
-        image={snapshotImage}
-        rectangles={rectangles}
-        setRectangles={setRectangles}
-        selectedRectangleId={selectedRectangleId}
-        setSelectedRectangleId={setSelectedRectangleId}
-      />
       {!grpcContext && (
         <GrpcConfig context={grpcContext} setContext={setGrpcContext} />
       )}
+      <GrpcProvider context={grpcContext}>
+        <ImageLabeller
+          image={snapshotImage}
+          rectangles={rectangles}
+          setRectangles={setRectangles}
+          selectedRectangleId={selectedRectangleId}
+          setSelectedRectangleId={setSelectedRectangleId}
+        />
+      </GrpcProvider>
       <div>
         Selected rectangle: {selectedRectangleId}{" "}
         {selectedRectangleId &&
