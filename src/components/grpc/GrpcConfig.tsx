@@ -130,7 +130,7 @@ function GrpcConfig({ context, setContext }: GrpcConfigProps) {
           />
         </Stack>
       </form>
-      <Alert severity="error">{errorMessage}</Alert>
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
     </Stack>
   );
 }
