@@ -21,7 +21,7 @@ export async function checkHealth(context: GrpcContextProps) {
   const transport = new GrpcWebFetchTransport({
     baseUrl: context.baseUrl,
   });
-  let client = new HealthClient(transport);
+  const client = new HealthClient(transport);
 
   try {
     const { response } = await client.check({ service: "" });
