@@ -1,11 +1,30 @@
-import { CssBaseline, StyledEngineProvider } from "@mui/material";
-import { PropsWithChildren } from "react";
+import {
+  createTheme,
+  CssBaseline,
+  StyledEngineProvider,
+  ThemeProvider,
+  useMediaQuery,
+} from "@mui/material";
+import { PropsWithChildren, useMemo } from "react";
 
 function MaterialProviders({ children }: PropsWithChildren) {
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: prefersDarkMode ? "dark" : "light",
+        },
+      }),
+    [prefersDarkMode],
+  );
+
   return (
     <StyledEngineProvider injectFirst>
-      <CssBaseline enableColorScheme />
-      {children}
+      <ThemeProvider theme={theme}>
+        <CssBaseline enableColorScheme />
+        {children}
+      </ThemeProvider>
     </StyledEngineProvider>
   );
 }
