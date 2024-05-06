@@ -1,10 +1,12 @@
 import { GrpcContextProps } from "./GrpcProvider.tsx";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
 import { HealthClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/grpc/health/v1/health_pb.client";
 import { HealthCheckResponse_ServingStatus } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/grpc/health/v1/health_pb";
+import { Alert, Stack, TextField } from "@mui/material";
+import ProgressButton from "../progress-button/ProgressButton.tsx";
 
-const defaultContext = { baseUrl: "http://localhost:50051" };
+const defaultContext = { baseUrl: "http://localhost:50050" };
 
 function isErrorWithMessage(error: unknown): error is Error {
   return (
@@ -86,7 +88,9 @@ function GrpcConfig({ context, setContext }: GrpcConfigProps) {
     };
   }
 
-  async function onSubmit() {
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+
     if (!newContext) {
       return;
     }
@@ -102,24 +106,32 @@ function GrpcConfig({ context, setContext }: GrpcConfigProps) {
     }
   }
 
-  return isValidating ? (
-    <>Connecting to server...</>
-  ) : (
-    <>
+  return (
+    <Stack spacing={2}>
       <form onSubmit={onSubmit}>
-        <label>
-          Server:
-          <input
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="center"
+          alignItems="center"
+        >
+          <TextField
+            label="Server"
             value={url}
             onChange={(e) => {
               setUrl(e.target.value);
             }}
+            disabled={isValidating}
           />
-        </label>
-        <input type="submit" value="Connect" disabled={isValidating} />
+          <ProgressButton
+            type="submit"
+            text="Connect"
+            inProgress={isValidating}
+          />
+        </Stack>
       </form>
-      {errorMessage}
-    </>
+      <Alert severity="error">{errorMessage}</Alert>
+    </Stack>
   );
 }
 
