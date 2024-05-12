@@ -20,6 +20,7 @@
     "@mui/icons-material": "^5.15.16",
     "@mui/material": "^5.15.16",
     "@protobuf-ts/grpcweb-transport": "^2.9.4",
+    "@types/node": "^20.12.11",
     "@types/uuid": "^9.0.8",
     "classnames": "^2.5.1",
     "konva": "^9.3.3",
