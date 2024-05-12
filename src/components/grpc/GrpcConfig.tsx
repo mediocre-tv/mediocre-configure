@@ -6,7 +6,7 @@ import { Alert, Stack, TextField } from "@mui/material";
 import ProgressButton from "../progress-button/ProgressButton.tsx";
 import { GrpcContextProps } from "./GrpcContext.tsx";
 
-const defaultContext = { baseUrl: "http://localhost:50050" };
+const defaultContext = { baseUrl: import.meta.env.VITE_CLIENT_URL };
 
 function isErrorWithMessage(error: unknown): error is Error {
   return (
