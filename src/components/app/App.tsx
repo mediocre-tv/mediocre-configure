@@ -8,22 +8,28 @@ import "@fontsource/roboto/700.css";
 import GrpcProvider from "../grpc/GrpcProvider.tsx";
 import { GrpcContextProps } from "../grpc/GrpcContext.tsx";
 import RegionEditor from "../region-editor/RegionEditor.tsx";
-import { Stack } from "@mui/material";
+import useDefaultGrpcContext from "../grpc/useDefaultGrpcContext.tsx";
+import { Box } from "@mui/material";
 
 function App() {
-  const [grpcContext, setGrpcContext] = useState<GrpcContextProps | null>(null);
+  const [loadingDefaultContext, defaultContext] = useDefaultGrpcContext();
+  const [customContext, setCustomContext] = useState<GrpcContextProps | null>(
+    null,
+  );
+
+  const context = defaultContext || customContext;
 
   return (
     <AppProviders>
-      <Stack height="100%" justifyContent="center" alignItems="center">
-        {grpcContext ? (
-          <GrpcProvider context={grpcContext}>
+      <Box height="100%" justifyContent="center" alignItems="center">
+        {!loadingDefaultContext && !context ? (
+          <GrpcConfig context={customContext} setContext={setCustomContext} />
+        ) : (
+          <GrpcProvider context={context}>
             <RegionEditor />
           </GrpcProvider>
-        ) : (
-          <GrpcConfig context={grpcContext} setContext={setGrpcContext} />
         )}
-      </Stack>
+      </Box>
     </AppProviders>
   );
 }
