@@ -24,23 +24,24 @@ function App() {
   return (
     <AppProviders>
       <div className={styles.container}>
-        {!grpcContext && (
+        {grpcContext ? (
+          <GrpcProvider context={grpcContext}>
+            <ImageLabeller
+              image={snapshotImage}
+              rectangles={rectangles}
+              setRectangles={setRectangles}
+              selectedRectangleId={selectedRectangleId}
+              setSelectedRectangleId={setSelectedRectangleId}
+            />
+            <div>
+              Selected rectangle: {selectedRectangleId}{" "}
+              {selectedRectangleId &&
+                `: ${JSON.stringify(rectangles[selectedRectangleId])}`}
+            </div>
+          </GrpcProvider>
+        ) : (
           <GrpcConfig context={grpcContext} setContext={setGrpcContext} />
         )}
-        <GrpcProvider context={grpcContext}>
-          <ImageLabeller
-            image={snapshotImage}
-            rectangles={rectangles}
-            setRectangles={setRectangles}
-            selectedRectangleId={selectedRectangleId}
-            setSelectedRectangleId={setSelectedRectangleId}
-          />
-        </GrpcProvider>
-        <div>
-          Selected rectangle: {selectedRectangleId}{" "}
-          {selectedRectangleId &&
-            `: ${JSON.stringify(rectangles[selectedRectangleId])}`}
-        </div>
       </div>
     </AppProviders>
   );
