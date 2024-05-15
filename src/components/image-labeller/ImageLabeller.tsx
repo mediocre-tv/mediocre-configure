@@ -1,9 +1,9 @@
 import { Rectangle, Rectangles } from "../shapes/Rectangle.tsx";
 import useImage from "use-image";
-import styles from "./ImageLabeller.module.css";
 import useImageContainer from "./UseImageContainer.ts";
 import { Dimensions } from "../shapes/Dimensions.ts";
 import ImageLabellerWindow from "./ImageLabellerWindow.tsx";
+import { Alert, Box, CircularProgress } from "@mui/material";
 
 function getScaledRectangle(rectangle: Rectangle, scale: number) {
   return {
@@ -82,7 +82,7 @@ function ScaledImageLabellerWindowContainer({
 
   return (
     // always render the stage container, otherwise we can't dynamically resize the image
-    <div className={styles.stageContainer} ref={ref}>
+    <Box width={1} ref={ref}>
       {dimensions && scale && (
         <ScaledImageLabellerWindow
           image={image}
@@ -94,7 +94,7 @@ function ScaledImageLabellerWindowContainer({
           setSelectedRectangleId={setSelectedRectangleId}
         />
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -116,7 +116,13 @@ export default function ImageLabeller({
   const [canvasImage, canvasImageStatus] = useImage(image);
 
   return (
-    <div className={styles.container}>
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      border="solid"
+      borderRadius={1}
+    >
       {canvasImage ? (
         <ScaledImageLabellerWindowContainer
           image={canvasImage}
@@ -125,9 +131,11 @@ export default function ImageLabeller({
           selectedRectangleId={selectedRectangleId}
           setSelectedRectangleId={setSelectedRectangleId}
         />
+      ) : canvasImageStatus ? (
+        <CircularProgress></CircularProgress>
       ) : (
-        <div className={styles.imageStatus}>{canvasImageStatus}</div>
+        <Alert severity="error">Failed to load image</Alert>
       )}
-    </div>
+    </Box>
   );
 }
