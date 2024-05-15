@@ -1,5 +1,5 @@
 import { PropsWithChildren } from "react";
-import { GrpcContext, GrpcContextProps } from "./GrpcContext";
+import { GrpcContext, GrpcContextProps } from "./GrpcContext.ts";
 
 interface GrpcProviderProps {
   context: GrpcContextProps | null;
