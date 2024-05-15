@@ -46,11 +46,11 @@ export default function RegionEditor() {
             }}
           >
             {Object.entries(rectangles).map(([id, rectangle]) => (
-              <Stack>
-                <Typography variant="h4" gutterBottom key={id}>
+              <Stack key={id}>
+                <Typography variant="h4" gutterBottom>
                   {id}
                 </Typography>
-                <Typography variant="h5" gutterBottom key={id}>
+                <Typography variant="h5" gutterBottom>
                   {JSON.stringify(rectangle)}
                 </Typography>
               </Stack>
