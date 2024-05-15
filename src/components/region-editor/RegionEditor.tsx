@@ -3,10 +3,13 @@ import snapshotImage from "../../assets/snapshot.png";
 import useLocalState from "../../hooks/UseLocalState.tsx";
 import { Rectangles } from "../shapes/Rectangle.tsx";
 import { useState } from "react";
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2";
 
 export default function RegionEditor() {
+  const theme = useTheme();
+  const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
+
   const [rectangles, setRectangles] = useLocalState<Rectangles>({}, "regions");
   const [selectedRectangleId, setSelectedRectangleId] = useState<string | null>(
     null,
@@ -32,7 +35,16 @@ export default function RegionEditor() {
           </Stack>
         </Grid2>
         <Grid2 height={1} xs={12} lg={6}>
-          <Stack height={1} overflow={"auto"} spacing={5} textAlign={"center"}>
+          <Stack
+            height={1}
+            spacing={5}
+            textAlign={"center"}
+            sx={{
+              ...(hasLgBreakpoint && {
+                overflow: "auto",
+              }),
+            }}
+          >
             {Object.entries(rectangles).map(([id, rectangle]) => (
               <Stack>
                 <Typography variant="h4" gutterBottom key={id}>
