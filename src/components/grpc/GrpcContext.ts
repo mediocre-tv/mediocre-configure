@@ -1,5 +1,6 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
+import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 
 export interface GrpcContextProps {
   domain: string;
@@ -14,7 +15,15 @@ export function getTransport(context: GrpcContextProps) {
   });
 }
 
-export function useGrpc() {
+export function useGrpcClient<T extends ServiceInfo>(
+  clientConstructor: new (transport: GrpcWebFetchTransport) => T,
+) {
   const context = useContext(GrpcContext);
-  return context ? getTransport(context) : null;
+
+  return useMemo(() => {
+    if (context) {
+      const transport = getTransport(context);
+      return new clientConstructor(transport);
+    }
+  }, [context, clientConstructor]);
 }
