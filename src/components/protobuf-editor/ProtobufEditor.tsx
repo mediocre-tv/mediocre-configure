@@ -6,13 +6,17 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  Switch,
+  TextField,
 } from "@mui/material";
 import { useCallback, useEffect, useId, useState } from "react";
 import {
   containsMessageType,
   FieldInfo,
   IMessageType,
+  LongType,
   MESSAGE_TYPE,
+  ScalarType,
 } from "@protobuf-ts/runtime";
 import { capitalCase } from "change-case";
 
@@ -27,20 +31,13 @@ export default function ProtobufEditor<T extends object>({
 }: ProtobufEditorProps<T>) {
   const [newMessage, setNewMessage] = useState(message);
 
-  console.log("ProtobufEditor has " + JSON.stringify(newMessage));
-
-  const setConsoleMessage = (msg: T) => {
-    console.log("ProtobufEditor set " + JSON.stringify(msg));
-    setNewMessage(msg);
-  };
-
   return containsMessageType(newMessage) ? (
     <Box>
       <p>{JSON.stringify(newMessage)}</p>
       <FormControl onSubmit={() => setMessage(newMessage)} fullWidth>
         <ProtobufEditorMessage
           message={newMessage}
-          setMessage={setConsoleMessage}
+          setMessage={setNewMessage}
           messageType={newMessage[MESSAGE_TYPE]}
         />
       </FormControl>
@@ -77,15 +74,9 @@ function ProtobufEditorMessage<T extends object>({
     setMessage(messageType.create(message));
   };
 
-  console.log(`ProtobufEditorMessage ${messageType.typeName}`);
-  console.log(
-    `ProtobufEditorMessage ${JSON.stringify(fieldNameToFieldInfosMap)}`,
-  );
-  console.log(`ProtobufEditorMessage ${JSON.stringify(message)}`);
-
   return Array.from(fieldNameToFieldInfosMap).map(([fieldName, fieldInfos]) => {
     if (fieldInfos.length === 0) {
-      return <p>No field infos?</p>;
+      throw new Error(`No field infos found for ${fieldName}`);
     }
 
     const firstFieldInfo = fieldInfos[0];
@@ -103,7 +94,6 @@ function ProtobufEditorMessage<T extends object>({
       );
     } else {
       const messageAsRecord = message as Record<string, unknown>;
-
       return (
         <ProtobufEditorField
           key={fieldName}
@@ -135,18 +125,17 @@ function ProtobufEditorField<T>({
   setValue,
   info,
 }: ProtobufEditorFieldProps<T>) {
-  if (info.repeat) {
-    return <p>{`repeated ${name}: ${JSON.stringify(info)}`}</p>;
-  }
+  // this does not cover all possibilities
+  // unsure how safe this component really is
 
-  if (info.kind === "map") {
-    return <p>{`map ${name}: ${JSON.stringify(info)}`}</p>;
-  }
+  const id = useId();
+  const required = !info.opt;
+  const label = capitalCase(name);
 
   if (info.kind === "message") {
     const messageType = info.T();
     const valueOrDefault =
-      value && typeof value === "object" && containsMessageType(value)
+      value && typeof value === "object" && messageType.is(value)
         ? value
         : messageType.create();
     return (
@@ -158,7 +147,86 @@ function ProtobufEditorField<T>({
     );
   }
 
-  return <p>{`${name}: ${JSON.stringify(info)}`}</p>;
+  if (info.kind === "scalar") {
+    const commonProps = {
+      id: id,
+      required: required,
+      label: label,
+      value: value,
+    };
+
+    if (info.T === ScalarType.DOUBLE || info.T === ScalarType.FLOAT) {
+      return (
+        <TextField
+          {...commonProps}
+          type="number"
+          onChange={(event) => {
+            const float = parseFloat(event.target.value);
+            if (!isNaN(float)) {
+              setValue(float as T);
+            }
+          }}
+        />
+      );
+    } else if (info.T === ScalarType.BOOL) {
+      return (
+        <Switch
+          {...commonProps}
+          onChange={(event) => setValue(event.target.checked as T)}
+        />
+      );
+    } else if (info.T === ScalarType.BYTES) {
+      return (
+        <TextField
+          {...commonProps}
+          type="text"
+          onChange={(event) => {
+            setValue(event.target.value as T);
+          }}
+        />
+      );
+    } else if (info.L === undefined || info.L === LongType.NUMBER) {
+      return (
+        <TextField
+          {...commonProps}
+          type="number"
+          onChange={(event) => {
+            const int = parseInt(event.target.value);
+            if (!isNaN(int)) {
+              setValue(int as T);
+            }
+          }}
+        />
+      );
+    } else if (info.L === LongType.BIGINT) {
+      return (
+        <TextField
+          {...commonProps}
+          type="number"
+          onChange={(event) => {
+            const bigInt = BigInt(event.target.value);
+            setValue(bigInt as T);
+          }}
+        />
+      );
+    } else {
+      return (
+        <TextField
+          {...commonProps}
+          type="text"
+          onChange={(event) => {
+            setValue(event.target.value as T);
+          }}
+        />
+      );
+    }
+  }
+
+  return (
+    <Alert severity="error">
+      Could not handle {name} {JSON.stringify(info)}
+    </Alert>
+  );
 }
 
 function getOneOfKind<T extends object>(
@@ -198,6 +266,30 @@ function getOneOfKind<T extends object>(
   };
 }
 
+function getDefaultValue(info: FieldInfo) {
+  // this does not cover all possibilities
+
+  if (info.kind === "message") {
+    return info.T().create();
+  }
+
+  if (info.kind === "scalar") {
+    if (info.T === ScalarType.DOUBLE || info.T === ScalarType.FLOAT) {
+      return 0;
+    } else if (info.T === ScalarType.BOOL) {
+      return false;
+    } else if (info.T === ScalarType.BYTES) {
+      return new Uint8Array();
+    } else if (info.L === undefined || info.L === LongType.NUMBER) {
+      return 0;
+    } else if (info.L === LongType.BIGINT) {
+      return BigInt(0);
+    } else {
+      return "";
+    }
+  }
+}
+
 interface ProtobufEditorOneofProps<T extends object> {
   oneofName: string;
   message: T;
@@ -216,7 +308,7 @@ function ProtobufEditorOneof<T extends object>({
   const oneofKind = getOneOfKind(oneofName, message, infos);
 
   const setOneofKind = useCallback(
-    (kind: string, value?: unknown) =>
+    (kind: string, value: unknown) =>
       setMessage({
         ...message,
         [oneofName]: { oneofKind: kind, [kind]: value },
@@ -226,12 +318,16 @@ function ProtobufEditorOneof<T extends object>({
 
   useEffect(() => {
     if (!oneofKind) {
-      setOneofKind(defaultInfo.localName);
+      setOneofKind(defaultInfo.localName, getDefaultValue(defaultInfo));
     }
-  }, [defaultInfo.localName, oneofKind, setOneofKind]);
+  }, [defaultInfo, oneofKind, setOneofKind]);
 
   if (!oneofKind) {
-    return <p>No oneof kind info</p>;
+    return (
+      <Alert severity={"warning"}>
+        No info for oneofKind field ${oneofName}
+      </Alert>
+    );
   }
 
   const { kind, value, info } = oneofKind;
@@ -240,7 +336,7 @@ function ProtobufEditorOneof<T extends object>({
     <ProtobufEditorOneofField
       name={oneofName}
       kind={kind}
-      setKind={(kind: string) => setOneofKind(kind)}
+      setKind={(kind: string) => setOneofKind(kind, getDefaultValue(info))}
       value={value}
       setValue={(value) => setOneofKind(kind, value)}
       kinds={infos.map((info) => info.localName)}
