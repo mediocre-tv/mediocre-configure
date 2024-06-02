@@ -23,6 +23,7 @@ import {
 } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
 import { crop, ocr } from "./Transform.ts";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
 
 interface RegionEditorLeftProps {
   image: string;
@@ -247,6 +248,8 @@ function RegionEditorRight({
   const theme = useTheme();
   const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
 
+  const [transform, setTransform] = useState(TransformToImage.create());
+
   return (
     <Stack
       height={1}
@@ -258,6 +261,7 @@ function RegionEditorRight({
         }),
       }}
     >
+      <ProtobufEditor message={transform} setMessage={setTransform} />
       {Object.entries(rectangles).map(([id, rectangle]) => (
         <RegionTransformations
           key={id}
