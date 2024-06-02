@@ -1,13 +1,17 @@
 import {
   Alert,
   Box,
+  Button,
   FormControl,
   InputLabel,
   MenuItem,
   Select,
   SelectChangeEvent,
+  Stack,
   Switch,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import { useCallback, useEffect, useId, useState } from "react";
 import {
@@ -19,6 +23,10 @@ import {
   ScalarType,
 } from "@protobuf-ts/runtime";
 import { capitalCase } from "change-case";
+import { isErrorWithMessage } from "../grpc/GrpcHealth.ts";
+
+const protobufEditorViews = ["Form", "JSON"] as const;
+type ProtobufEditorView = (typeof protobufEditorViews)[number];
 
 interface ProtobufEditorProps<T extends object> {
   message: T;
@@ -30,21 +38,122 @@ export default function ProtobufEditor<T extends object>({
   setMessage,
 }: ProtobufEditorProps<T>) {
   const [newMessage, setNewMessage] = useState(message);
+  const [view, setView] = useState<ProtobufEditorView>("Form");
+  const messageType = containsMessageType(message)
+    ? message[MESSAGE_TYPE]
+    : null;
 
-  return containsMessageType(newMessage) ? (
-    <Box>
-      <p>{JSON.stringify(newMessage)}</p>
+  const [error, setError] = useState("");
+  const valid = messageType !== null && !error;
+
+  return (
+    <>
+      <Stack alignItems="end">
+        <ToggleButtonGroup
+          exclusive
+          value={view}
+          onChange={(_, value) => setView(value)}
+          disabled={!valid}
+        >
+          {protobufEditorViews.map((view) => (
+            <ToggleButton value={view} sx={{ textTransform: "none" }}>
+              {view}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Stack>
       <FormControl onSubmit={() => setMessage(newMessage)} fullWidth>
-        <ProtobufEditorMessage
-          message={newMessage}
-          setMessage={setNewMessage}
-          messageType={newMessage[MESSAGE_TYPE]}
-        />
+        {valid && view === "Form" ? (
+          <ProtobufEditorForm
+            message={newMessage}
+            setMessage={setNewMessage}
+            messageType={messageType}
+            setError={setError}
+          />
+        ) : (
+          messageType && (
+            <ProtobufEditorJson
+              message={newMessage}
+              setMessage={setNewMessage}
+              messageType={messageType}
+              setError={setError}
+            />
+          )
+        )}
+        {!valid && (
+          <Box>
+            <Alert severity="error">{error ?? "Something went wrong"}</Alert>
+          </Box>
+        )}
+        <Button disabled={!valid} variant="contained" type="submit">
+          Save
+        </Button>
       </FormControl>
-    </Box>
-  ) : (
+    </>
+  );
+}
+
+interface ProtobufEditorJsonProps<T extends object> {
+  message: T;
+  setMessage: (message: T) => void;
+  messageType: IMessageType<T>;
+  setError: (error: string) => void;
+}
+
+function ProtobufEditorJson<T extends object>({
+  message,
+  setMessage,
+  messageType,
+  setError,
+}: ProtobufEditorJsonProps<T>) {
+  return (
     <Box>
-      <Alert severity="error">Could not identify message type</Alert>
+      <TextField
+        multiline
+        rows={10}
+        defaultValue={JSON.stringify(messageType.toJson(message), null, 2)}
+        onChange={(event) => {
+          try {
+            const message = messageType.fromJsonString(event.target.value);
+            setMessage(message);
+            setError("");
+          } catch (error) {
+            if (isErrorWithMessage(error)) {
+              setError(error?.message);
+            } else {
+              setError("Unknown error");
+            }
+          }
+        }}
+        InputProps={{
+          sx: {
+            fontFamily: "monospace",
+          },
+        }}
+      />
+    </Box>
+  );
+}
+
+interface ProtobufEditorFormProps<T extends object> {
+  message: T;
+  setMessage: (message: T) => void;
+  messageType: IMessageType<T>;
+  setError: (error: string) => void;
+}
+
+function ProtobufEditorForm<T extends object>({
+  message,
+  setMessage,
+  messageType,
+}: ProtobufEditorFormProps<T>) {
+  return (
+    <Box>
+      <ProtobufEditorMessage
+        message={message}
+        setMessage={setMessage}
+        messageType={messageType}
+      />
     </Box>
   );
 }
