@@ -25,15 +25,26 @@ import DeleteIcon from "@mui/icons-material/Delete";
 interface TransformationResultProps {
   label?: string;
   result: TransformResult | null;
+  onClick?: () => void;
 }
 
-function TransformationResult({ label, result }: TransformationResultProps) {
+function TransformationResult({
+  label,
+  result,
+  onClick,
+}: TransformationResultProps) {
   return (
     <Stack spacing={1}>
       <Typography align={"center"}>{label}</Typography>
       {result?.result ? (
         <>
-          <Box display={"flex"} width={100} height={100} alignItems={"center"}>
+          <Box
+            display={"flex"}
+            width={100}
+            height={100}
+            alignItems={"center"}
+            onClick={onClick}
+          >
             {result.result instanceof Uint8Array ? (
               <img
                 src={URL.createObjectURL(new Blob([result.result]))}
