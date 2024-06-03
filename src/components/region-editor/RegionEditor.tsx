@@ -2,7 +2,7 @@ import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
 import snapshotImage from "../../assets/snapshot.png";
 import useLocalState from "../../hooks/UseLocalState.tsx";
 import { Rectangle, Rectangles } from "../shapes/Rectangle.tsx";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   Box,
   Dialog,
@@ -20,30 +20,88 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import { useGrpcClient } from "../grpc/GrpcContext.ts";
 import styles from "./RegionEditor.module.css";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb.client";
-import {
-  TransformToImage,
-  TransformToOther,
-} from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
+import { TransformToImage } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
 import { crop, ocr } from "./Transform.ts";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
+import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
 
 interface RegionEditorLeftProps {
   image: string;
-  rectangles: Rectangles;
-  setRectangles: (rectangles: Rectangles) => void;
+  regions: Region[];
+  setRegions: (regions: Region[]) => void;
   selectedRectangleId: string | null;
   setSelectedRectangleId: (id: string | null) => void;
 }
 
+function getRegionRectangle(region: Region): Rectangle | null {
+  const transformation = region.transformations[0]?.transformation;
+  if (transformation.oneofKind !== "crop") {
+    return null;
+  }
+
+  const crop = transformation.crop;
+  if (crop.params.oneofKind !== "fixed") {
+    return null;
+  }
+
+  const { x, y, width, height } = crop.params.fixed;
+  return { x: x, y: y, width: width, height: height };
+}
+
+function getRegionRectangles(regions: Region[]): Rectangles {
+  return Object.fromEntries(
+    regions
+      .map((region) => ({
+        id: region.id,
+        rectangle: getRegionRectangle(region),
+      }))
+      .filter(
+        (value): value is { id: string; rectangle: Rectangle } =>
+          value.rectangle !== null,
+      )
+      .map(({ id, rectangle }) => [id, rectangle]),
+  );
+}
+
+function setRegionRectangles(
+  rectangles: Rectangles,
+  regions: Region[],
+  setRegions: (regions: Region[]) => void,
+) {
+  const updatedRegions = regions.map((region) => {
+    const rectangle = rectangles[region.id];
+    if (rectangle === undefined || rectangle === getRegionRectangle(region)) {
+      return region;
+    } else {
+      const transformations = region.transformations;
+      transformations[0] = crop(rectangle);
+      return {
+        ...region,
+        transformations,
+      };
+    }
+  });
+  const newRegions: Region[] = Object.entries(rectangles)
+    .filter(([id]) => !regions.find((region) => region.id === id))
+    .map(([id, rectangle]) => {
+      return Region.create({ id: id, transformations: [crop(rectangle)] });
+    });
+  setRegions([...updatedRegions, ...newRegions]);
+}
+
 function RegionEditorLeft({
   image,
-  rectangles,
+  regions,
   selectedRectangleId,
-  setRectangles,
+  setRegions,
   setSelectedRectangleId,
 }: RegionEditorLeftProps) {
+  const rectangles = getRegionRectangles(regions);
+  const setRectangles = (rectangles: Rectangles) =>
+    setRegionRectangles(rectangles, regions, setRegions);
+
   return (
     <Stack spacing={5}>
       <ImageLabeller
@@ -106,35 +164,31 @@ interface TransformResult {
 }
 
 interface RegionTransformationsProps {
-  id: string;
-  rectangle: Rectangle;
-  onDeleteRectangle: () => void;
+  region: Region;
+  onUpdateRegion: (region: Region) => void;
+  onDeleteRegion: () => void;
   imageData: Uint8Array | null;
 }
 
 function RegionTransformations({
-  id,
-  rectangle,
-  onDeleteRectangle,
+  region,
+  onUpdateRegion,
+  onDeleteRegion,
   imageData,
 }: RegionTransformationsProps) {
   const transformClient = useGrpcClient(TransformServiceClient);
   const [transformResults, setTransformResults] = useState<TransformResult[]>(
     [],
   );
+  const setTransformations = (transformations: TransformToImage[]) =>
+    onUpdateRegion({ ...region, transformations });
 
-  const firstTransformation = useMemo(() => crop(rectangle), [rectangle]);
-  const lastTransformation = useMemo(() => ocr(), []);
-  const [transformations, setTransformations] = useState<TransformToImage[]>(
-    [],
-  );
+  const { name, transformations } = region;
 
   useEffect(() => {
     async function transform(
       imageData: Uint8Array,
       client: TransformServiceClient,
-      firstTransformation: TransformToImage,
-      lastTransformation: TransformToOther,
       transformations: TransformToImage[],
     ) {
       const transform = client.transform({
@@ -143,8 +197,8 @@ function RegionTransformations({
             data: imageData,
           },
         },
-        imageTransformations: [firstTransformation, ...transformations],
-        otherTransformation: lastTransformation,
+        imageTransformations: transformations,
+        otherTransformation: ocr(),
       });
 
       for await (const { transformed, elapsed } of transform.responses) {
@@ -166,21 +220,9 @@ function RegionTransformations({
 
     if (imageData && transformClient) {
       setTransformResults([]);
-      transform(
-        imageData,
-        transformClient,
-        firstTransformation,
-        lastTransformation,
-        transformations,
-      );
+      transform(imageData, transformClient, transformations);
     }
-  }, [
-    imageData,
-    transformClient,
-    firstTransformation,
-    lastTransformation,
-    transformations,
-  ]);
+  }, [imageData, transformClient, transformations]);
 
   return (
     <Stack border={1} borderRadius={1} padding={2} spacing={1}>
@@ -190,10 +232,10 @@ function RegionTransformations({
         justifyContent={"space-between"}
       >
         <Typography variant="body1" gutterBottom>
-          {id}
+          {name}
         </Typography>
         <Stack direction={"row"}>
-          <IconButton onClick={onDeleteRectangle}>
+          <IconButton onClick={onDeleteRegion}>
             <DeleteIcon />
           </IconButton>
         </Stack>
@@ -201,7 +243,7 @@ function RegionTransformations({
       <Divider />
       <Stack direction={"row"} justifyContent={"space-between"} spacing={2}>
         <TransformationResult
-          transformation={firstTransformation.transformation.oneofKind}
+          transformation={transformations[0].transformation.oneofKind}
           result={transformResults.at(0) ?? null}
         />
         <Stack
@@ -215,7 +257,7 @@ function RegionTransformations({
               setTransformations([transformation, ...transformations])
             }
           />
-          {transformations.map((transformation, index) => (
+          {transformations.slice(1).map((transformation, index) => (
             <Fragment key={index}>
               <TransformationResult
                 transformation={transformation.transformation.oneofKind}
@@ -232,7 +274,7 @@ function RegionTransformations({
           ))}
         </Stack>
         <TransformationResult
-          transformation={lastTransformation.transformation.oneofKind}
+          transformation="OCR"
           result={transformResults.at(-1) ?? null}
         />
       </Stack>
@@ -275,14 +317,14 @@ function AddTransformationButton({
 
 interface RegionEditorRightParams {
   image: string;
-  rectangles: Rectangles;
-  setRectangles: (rectangles: Rectangles) => void;
+  regions: Region[];
+  setRegions: (regions: Region[]) => void;
 }
 
 function RegionEditorRight({
   image,
-  rectangles,
-  setRectangles,
+  regions,
+  setRegions,
 }: RegionEditorRightParams) {
   const [imageData, setImageData] = useState<Uint8Array | null>(null);
   useEffect(() => {
@@ -306,17 +348,19 @@ function RegionEditorRight({
         }),
       }}
     >
-      {Object.entries(rectangles).map(([id, rectangle]) => (
+      {regions.map((region, index, regions) => (
         <RegionTransformations
-          key={id}
-          id={id}
-          rectangle={rectangle}
-          onDeleteRectangle={() => {
-            setRectangles(
-              Object.fromEntries(
-                Object.entries(rectangles).filter(([rectId]) => rectId !== id),
-              ),
-            );
+          key={region.id}
+          region={region}
+          onUpdateRegion={(region) => {
+            const updatedRegions = regions;
+            updatedRegions[index] = region;
+            setRegions([...updatedRegions]);
+          }}
+          onDeleteRegion={() => {
+            const updatedRegions = regions;
+            updatedRegions.splice(index, 1);
+            setRegions([...updatedRegions]);
           }}
           imageData={imageData}
         />
@@ -326,7 +370,7 @@ function RegionEditorRight({
 }
 
 export default function RegionEditor() {
-  const [rectangles, setRectangles] = useLocalState<Rectangles>({}, "regions");
+  const [regions, setRegions] = useLocalState<Region[]>([], "regions");
   const [selectedRectangleId, setSelectedRectangleId] = useState<string | null>(
     null,
   );
@@ -337,8 +381,8 @@ export default function RegionEditor() {
         <Grid2 xs={12} lg={6}>
           <RegionEditorLeft
             image={image}
-            rectangles={rectangles}
-            setRectangles={setRectangles}
+            regions={regions}
+            setRegions={setRegions}
             selectedRectangleId={selectedRectangleId}
             setSelectedRectangleId={setSelectedRectangleId}
           />
@@ -346,8 +390,8 @@ export default function RegionEditor() {
         <Grid2 height={1} xs={12} lg={6}>
           <RegionEditorRight
             image={image}
-            rectangles={rectangles}
-            setRectangles={setRectangles}
+            regions={regions}
+            setRegions={setRegions}
           />
         </Grid2>
       </Grid2>
