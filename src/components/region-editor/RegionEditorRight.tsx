@@ -108,7 +108,7 @@ function RegionTransformationsBody({
   const ocrResult = results[transformations.length];
 
   return (
-    <Stack direction={"row"} justifyContent={"space-between"} spacing={2}>
+    <Stack direction={"row"} spacing={2}>
       <TransformationResult
         transformation={firstTransformation.transformation.oneofKind}
         result={results[0] ?? null}
@@ -118,6 +118,8 @@ function RegionTransformationsBody({
         spacing={2}
         overflow="auto"
         alignItems={"center"}
+        justifyContent={"space-evenly"}
+        width={1}
       >
         <AddTransformationButton
           setTransformation={(transformation) => {
