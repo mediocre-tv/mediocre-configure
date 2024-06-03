@@ -31,8 +31,6 @@ interface RegionEditorLeftProps {
   image: string;
   regions: Region[];
   setRegions: (regions: Region[]) => void;
-  selectedRectangleId: string | null;
-  setSelectedRectangleId: (id: string | null) => void;
 }
 
 function getRegionRectangle(region: Region): Rectangle | null {
@@ -94,9 +92,7 @@ function setRegionRectangles(
 function RegionEditorLeft({
   image,
   regions,
-  selectedRectangleId,
   setRegions,
-  setSelectedRectangleId,
 }: RegionEditorLeftProps) {
   const rectangles = getRegionRectangles(regions);
   const setRectangles = (rectangles: Rectangles) =>
@@ -108,14 +104,7 @@ function RegionEditorLeft({
         image={image}
         rectangles={rectangles}
         setRectangles={setRectangles}
-        selectedRectangleId={selectedRectangleId}
-        setSelectedRectangleId={setSelectedRectangleId}
       />
-      {selectedRectangleId && (
-        <Typography variant="h4">
-          Selected rectangle: {selectedRectangleId}
-        </Typography>
-      )}
     </Stack>
   );
 }
@@ -371,9 +360,6 @@ function RegionEditorRight({
 
 export default function RegionEditor() {
   const [regions, setRegions] = useLocalState<Region[]>([], "regions");
-  const [selectedRectangleId, setSelectedRectangleId] = useState<string | null>(
-    null,
-  );
   const image = snapshotImage;
   return (
     <Box width={1} height={1} display="flex" justifyContent="center" p={10}>
@@ -383,8 +369,6 @@ export default function RegionEditor() {
             image={image}
             regions={regions}
             setRegions={setRegions}
-            selectedRectangleId={selectedRectangleId}
-            setSelectedRectangleId={setSelectedRectangleId}
           />
         </Grid2>
         <Grid2 height={1} xs={12} lg={6}>

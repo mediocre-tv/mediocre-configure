@@ -29,8 +29,7 @@ interface ScaledImageLabellerWindowProps {
   scale: number;
   rectangles: Rectangles;
   setRectangles: (rectangles: Rectangles) => void;
-  selectedRectangleId: string | null;
-  setSelectedRectangleId: (id: string | null) => void;
+  onSelectRectangle: (id: string | null) => void;
 }
 
 function ScaledImageLabellerWindow({
@@ -39,8 +38,7 @@ function ScaledImageLabellerWindow({
   scale,
   rectangles,
   setRectangles,
-  selectedRectangleId,
-  setSelectedRectangleId,
+  onSelectRectangle,
 }: ScaledImageLabellerWindowProps) {
   const scaledRectangles = getScaledRectangles(rectangles, scale);
   const setScaledRectangles = (scaledRectangles: Rectangles) => {
@@ -57,8 +55,7 @@ function ScaledImageLabellerWindow({
       dimensions={dimensions}
       rectangles={scaledRectangles}
       setRectangles={setScaledRectangles}
-      selectedRectangleId={selectedRectangleId}
-      setSelectedRectangleId={setSelectedRectangleId}
+      onSelectRectangle={onSelectRectangle}
     />
   );
 }
@@ -67,16 +64,14 @@ interface ScaledImageLabellerWindowContainerProps {
   image: HTMLImageElement;
   rectangles: Rectangles;
   setRectangles: (rectangles: Rectangles) => void;
-  selectedRectangleId: string | null;
-  setSelectedRectangleId: (id: string | null) => void;
+  onSelectRectangle: (id: string | null) => void;
 }
 
 function ScaledImageLabellerWindowContainer({
   image,
   rectangles,
   setRectangles,
-  selectedRectangleId,
-  setSelectedRectangleId,
+  onSelectRectangle,
 }: ScaledImageLabellerWindowContainerProps) {
   const { ref, dimensions, scale: scale } = useImageContainer(image);
 
@@ -90,8 +85,7 @@ function ScaledImageLabellerWindowContainer({
           scale={scale}
           rectangles={rectangles}
           setRectangles={setRectangles}
-          selectedRectangleId={selectedRectangleId}
-          setSelectedRectangleId={setSelectedRectangleId}
+          onSelectRectangle={onSelectRectangle}
         />
       )}
     </Box>
@@ -102,16 +96,14 @@ interface ImageLabellerProps {
   image: string;
   rectangles: Rectangles;
   setRectangles: (rectangles: Rectangles) => void;
-  selectedRectangleId: string | null;
-  setSelectedRectangleId: (id: string | null) => void;
+  onSelectRectangle?: (id: string | null) => void;
 }
 
 export default function ImageLabeller({
   image,
   rectangles,
   setRectangles,
-  selectedRectangleId,
-  setSelectedRectangleId,
+  onSelectRectangle,
 }: ImageLabellerProps) {
   const [canvasImage, canvasImageStatus] = useImage(image);
 
@@ -128,8 +120,7 @@ export default function ImageLabeller({
           image={canvasImage}
           rectangles={rectangles}
           setRectangles={setRectangles}
-          selectedRectangleId={selectedRectangleId}
-          setSelectedRectangleId={setSelectedRectangleId}
+          onSelectRectangle={onSelectRectangle}
         />
       ) : canvasImageStatus ? (
         <CircularProgress></CircularProgress>

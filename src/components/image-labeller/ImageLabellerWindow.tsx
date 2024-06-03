@@ -4,9 +4,9 @@ import { Position } from "../shapes/Position.ts";
 import { v4 as uuid } from "uuid";
 import { StandardRect, TransformableRect } from "./KonvaRect.tsx";
 import Konva from "konva";
-import KonvaEventObject = Konva.KonvaEventObject;
 import { Dimensions } from "../shapes/Dimensions.ts";
 import { Rectangle, Rectangles } from "../shapes/Rectangle.tsx";
+import KonvaEventObject = Konva.KonvaEventObject;
 
 interface ImageLayerCrosshairsProps {
   mousePosition: Position;
@@ -62,8 +62,7 @@ function ImageLayer({
 interface RectanglesLayerProps {
   rectangles: Rectangles;
   setRectangles: (rectangles: Rectangles) => void;
-  selectedRectangleId: string | null;
-  setSelectedRectangleId: (id: string | null) => void;
+  onSelectRectangle: (id: string | null) => void;
   startRedrawingRectangle: (startPosition: Position, id: string) => void;
   boundary: Dimensions;
   setCursor: (cursor: string | null) => void;
@@ -72,7 +71,7 @@ interface RectanglesLayerProps {
 function RectanglesLayer({
   rectangles,
   setRectangles,
-  setSelectedRectangleId,
+  onSelectRectangle,
   startRedrawingRectangle,
   boundary,
   setCursor,
@@ -87,7 +86,7 @@ function RectanglesLayer({
           <TransformableRect
             key={id}
             rectangle={rectangle}
-            onSelect={() => setSelectedRectangleId(id)}
+            onSelect={() => onSelectRectangle(id)}
             startRedrawingRectangle={(position) =>
               startRedrawingRectangle(position, id)
             }
@@ -133,8 +132,7 @@ interface ImageLabellerWindowProps {
   dimensions: Dimensions;
   rectangles: Rectangles;
   setRectangles: (rectangles: Rectangles) => void;
-  selectedRectangleId: string | null;
-  setSelectedRectangleId: (id: string | null) => void;
+  onSelectRectangle: (id: string | null) => void;
 }
 
 interface RectangleInProgress {
@@ -147,8 +145,7 @@ export default function ImageLabellerWindow({
   dimensions,
   rectangles,
   setRectangles,
-  selectedRectangleId,
-  setSelectedRectangleId,
+  onSelectRectangle,
 }: ImageLabellerWindowProps) {
   const [mousePosition, setMousePosition] = useState<Position | null>(null);
   const [rectanglesCursor, setRectanglesCursor] = useState<string | null>(null);
@@ -200,8 +197,7 @@ export default function ImageLabellerWindow({
       <RectanglesLayer
         rectangles={rectangles}
         setRectangles={setRectangles}
-        setSelectedRectangleId={setSelectedRectangleId}
-        selectedRectangleId={selectedRectangleId}
+        onSelectRectangle={onSelectRectangle}
         startRedrawingRectangle={(position, id) =>
           setRectangleInProgress({ id: id, start: position })
         }
