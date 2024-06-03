@@ -127,7 +127,7 @@ function RegionTransformationsBody({
         width={1}
       >
         <AddTransformationButton
-          setTransformation={(transformation) =>
+          addTransformation={(transformation) =>
             addTransformation(transformation, 0)
           }
         />
@@ -170,7 +170,7 @@ function RegionIntermediateTransformations({
         transformation={transformation.transformation.oneofKind}
         result={result}
       />
-      <AddTransformationButton setTransformation={addTransformation} />
+      <AddTransformationButton addTransformation={addTransformation} />
     </>
   );
 }
@@ -253,11 +253,11 @@ function RegionTransformations({
 }
 
 interface AddTransformationButtonProps {
-  setTransformation: (transformation: TransformToImage) => void;
+  addTransformation: (transformation: TransformToImage) => void;
 }
 
 function AddTransformationButton({
-  setTransformation,
+  addTransformation,
 }: AddTransformationButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const open = () => setIsOpen(true);
@@ -274,7 +274,7 @@ function AddTransformationButton({
           <ProtobufEditor
             message={TransformToImage.create()}
             setMessage={(transformation) => {
-              setTransformation(transformation);
+              addTransformation(transformation);
               close();
             }}
             onCancel={close}
