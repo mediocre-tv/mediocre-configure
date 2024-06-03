@@ -24,12 +24,14 @@ interface ProtobufEditorProps<T extends object> {
   message: T;
   setMessage: (message: T) => void;
   onCancel: () => void;
+  onPreview: (message: T) => void;
 }
 
 export default function ProtobufEditor<T extends object>({
   message,
   setMessage,
   onCancel,
+  onPreview,
 }: ProtobufEditorProps<T>) {
   const [newMessage, setNewMessage] = useState(message);
   const [view, setView] = useState<ProtobufEditorView>("Form");
@@ -39,6 +41,11 @@ export default function ProtobufEditor<T extends object>({
 
   const [error, setError] = useState("");
   const valid = messageType !== null && !error;
+
+  const onUpdateMessage = (message: T) => {
+    setNewMessage(message);
+    onPreview(message);
+  };
 
   return (
     <FormControl fullWidth>
@@ -54,7 +61,7 @@ export default function ProtobufEditor<T extends object>({
           {valid && view === "Form" ? (
             <ProtobufEditorForm
               message={newMessage}
-              setMessage={setNewMessage}
+              setMessage={onUpdateMessage}
               messageType={messageType}
               setError={setError}
             />
@@ -62,7 +69,7 @@ export default function ProtobufEditor<T extends object>({
             messageType && (
               <ProtobufEditorJson
                 message={newMessage}
-                setMessage={setNewMessage}
+                setMessage={onUpdateMessage}
                 messageType={messageType}
                 setError={setError}
               />

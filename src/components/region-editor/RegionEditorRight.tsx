@@ -23,17 +23,14 @@ import { ocr } from "./Transform.ts";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 interface TransformationResultProps {
-  transformation?: string;
+  label?: string;
   result: TransformResult | null;
 }
 
-function TransformationResult({
-  transformation,
-  result,
-}: TransformationResultProps) {
+function TransformationResult({ label, result }: TransformationResultProps) {
   return (
     <Stack spacing={1}>
-      <Typography>{transformation}</Typography>
+      <Typography align={"center"}>{label}</Typography>
       {result?.result ? (
         <>
           <Box display={"flex"} width={100} height={100} alignItems={"center"}>
@@ -48,12 +45,14 @@ function TransformationResult({
               </Typography>
             )}
           </Box>
-          <Typography>{`${result.elapsed.toFixed(3)}ms`}</Typography>
+          <Typography
+            align={"center"}
+          >{`${result.elapsed.toFixed(3)}ms`}</Typography>
         </>
       ) : (
         <>
           <Skeleton width={100} height={100}></Skeleton>
-          <Typography>Loading</Typography>
+          <Typography align={"center"}>Loading</Typography>
         </>
       )}
     </Stack>
@@ -115,7 +114,7 @@ function RegionTransformationsBody({
   return (
     <Stack direction={"row"} spacing={2}>
       <TransformationResult
-        transformation={transformations[0].transformation.oneofKind}
+        label={transformations[0].transformation.oneofKind}
         result={results[0] ?? null}
       />
       <Stack
@@ -130,6 +129,7 @@ function RegionTransformationsBody({
           addTransformation={(transformation) =>
             addTransformation(transformation, 0)
           }
+          previousResult={results[0] ?? null}
         />
         {transformations.slice(1).map((transformation, index) => {
           const actualIndex = index + 1; // we skipped the first transformation
@@ -146,7 +146,7 @@ function RegionTransformationsBody({
         })}
       </Stack>
       <TransformationResult
-        transformation="OCR"
+        label="OCR"
         result={results[transformations.length] ?? null}
       />
     </Stack>
@@ -167,10 +167,13 @@ function RegionIntermediateTransformations({
   return (
     <>
       <TransformationResult
-        transformation={transformation.transformation.oneofKind}
+        label={transformation.transformation.oneofKind}
         result={result}
       />
-      <AddTransformationButton addTransformation={addTransformation} />
+      <AddTransformationButton
+        addTransformation={addTransformation}
+        previousResult={result}
+      />
     </>
   );
 }
@@ -254,10 +257,12 @@ function RegionTransformations({
 
 interface AddTransformationButtonProps {
   addTransformation: (transformation: TransformToImage) => void;
+  previousResult: TransformResult | null;
 }
 
 function AddTransformationButton({
   addTransformation,
+  previousResult,
 }: AddTransformationButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const open = () => setIsOpen(true);
@@ -268,20 +273,91 @@ function AddTransformationButton({
       <IconButton size="small" onClick={open}>
         <AddCircleOutlineOutlinedIcon />
       </IconButton>
-      <Dialog onClose={close} open={isOpen} fullWidth maxWidth="sm">
-        <DialogTitle>Add a transformation</DialogTitle>
-        <DialogContent>
+      <AddTransformationDialog
+        addTransformation={addTransformation}
+        isOpen={isOpen}
+        onClose={close}
+        previousResult={previousResult}
+      />
+    </Box>
+  );
+}
+
+interface AddTransformationDialogProps {
+  addTransformation: (transformation: TransformToImage) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  previousResult: TransformResult | null;
+}
+
+function AddTransformationDialog({
+  addTransformation,
+  isOpen,
+  onClose,
+  previousResult,
+}: AddTransformationDialogProps) {
+  const transformClient = useGrpcClient(TransformServiceClient);
+  const [transformResult, setTransformResult] =
+    useState<TransformResult | null>(null);
+
+  const onPreview = async (transformation: TransformToImage) => {
+    if (
+      !transformClient ||
+      !previousResult?.result ||
+      !(previousResult.result instanceof Uint8Array)
+    ) {
+      return;
+    }
+
+    setTransformResult(null);
+
+    const transform = transformClient.transform({
+      image: {
+        blob: {
+          data: previousResult.result,
+        },
+      },
+      imageTransformations: [transformation],
+    });
+
+    for await (const { transformed, elapsed } of transform.responses) {
+      if (transformed.oneofKind === "image") {
+        const data = transformed.image.blob?.data;
+        if (data) {
+          const result: TransformResult = { result: data, elapsed: elapsed };
+          setTransformResult(result);
+        }
+      } else if (transformed.oneofKind === "characters") {
+        const result: TransformResult = {
+          result: transformed.characters,
+          elapsed: elapsed,
+        };
+        setTransformResult(result);
+      }
+    }
+  };
+
+  return (
+    <Dialog onClose={onClose} open={isOpen} fullWidth maxWidth="sm">
+      <DialogTitle>Add a transformation</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2}>
+          <Stack direction={"row"} justifyContent={"space-evenly"}>
+            <TransformationResult label="Before" result={previousResult} />
+            <TransformationResult label="After" result={transformResult} />
+          </Stack>
           <ProtobufEditor
             message={TransformToImage.create()}
             setMessage={(transformation) => {
               addTransformation(transformation);
-              close();
+              onClose();
             }}
-            onCancel={close}
+            onCancel={onClose}
+            onPreview={onPreview}
           />
-        </DialogContent>
-      </Dialog>
-    </Box>
+        </Stack>
+      </DialogContent>
+    </Dialog>
   );
 }
 
