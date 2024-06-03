@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import styles from "./RegionEditor.module.css";
 import { Region } from "../../../../mediocre-service/@buf/typescript/mediocre/configuration/v1beta/configuration_pb";
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
 import { TransformToImage } from "../../../../mediocre-service/@buf/typescript/mediocre/image/transform/v1beta/transform_pb";
@@ -103,14 +103,19 @@ function RegionTransformationsBody({
   setTransformations,
   results,
 }: RegionTransformationsBodyProps) {
-  const firstTransformation = transformations[0];
-  const intermediateTransformations = transformations.slice(1);
-  const ocrResult = results[transformations.length];
+  const addTransformation = (
+    transformation: TransformToImage,
+    index: number,
+  ) => {
+    const splicedTransformations = transformations;
+    splicedTransformations.splice(index + 1, 0, transformation);
+    setTransformations([...splicedTransformations]);
+  };
 
   return (
     <Stack direction={"row"} spacing={2}>
       <TransformationResult
-        transformation={firstTransformation.transformation.oneofKind}
+        transformation={transformations[0].transformation.oneofKind}
         result={results[0] ?? null}
       />
       <Stack
@@ -122,34 +127,51 @@ function RegionTransformationsBody({
         width={1}
       >
         <AddTransformationButton
-          setTransformation={(transformation) => {
-            const splicedTransformations = transformations;
-            splicedTransformations.splice(1, 0, transformation);
-            setTransformations([...splicedTransformations]);
-          }}
+          setTransformation={(transformation) =>
+            addTransformation(transformation, 0)
+          }
         />
-        {intermediateTransformations.map((transformation, offsetIndex) => {
-          const actualIndex = offsetIndex + 1; // 1st transform not included in this map
-          const insertIndex = actualIndex + 1; // insert new after current
+        {transformations.slice(1).map((transformation, index) => {
+          const actualIndex = index + 1; // we skipped the first transformation
           return (
-            <Fragment key={actualIndex}>
-              <TransformationResult
-                transformation={transformation.transformation.oneofKind}
-                result={results[actualIndex] ?? null}
-              />
-              <AddTransformationButton
-                setTransformation={(transformation) => {
-                  const splicedTransformations = transformations;
-                  splicedTransformations.splice(insertIndex, 0, transformation);
-                  setTransformations([...splicedTransformations]);
-                }}
-              />
-            </Fragment>
+            <RegionIntermediateTransformations
+              key={actualIndex}
+              result={results[actualIndex] ?? null}
+              transformation={transformation}
+              addTransformation={(transformation) =>
+                addTransformation(transformation, actualIndex)
+              }
+            />
           );
         })}
       </Stack>
-      <TransformationResult transformation="OCR" result={ocrResult ?? null} />
+      <TransformationResult
+        transformation="OCR"
+        result={results[transformations.length] ?? null}
+      />
     </Stack>
+  );
+}
+
+interface RegionIntermediateTransformationsProps {
+  result: TransformResult | null;
+  transformation: TransformToImage;
+  addTransformation: (transformation: TransformToImage) => void;
+}
+
+function RegionIntermediateTransformations({
+  result,
+  transformation,
+  addTransformation,
+}: RegionIntermediateTransformationsProps) {
+  return (
+    <>
+      <TransformationResult
+        transformation={transformation.transformation.oneofKind}
+        result={result}
+      />
+      <AddTransformationButton setTransformation={addTransformation} />
+    </>
   );
 }
 
