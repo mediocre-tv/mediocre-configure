@@ -65,6 +65,92 @@ interface TransformResult {
   elapsed: number;
 }
 
+interface RegionTransformationsHeaderProps {
+  name: string;
+  onDeleteRegion: () => void;
+}
+
+function RegionTransformationsHeader({
+  name,
+  onDeleteRegion,
+}: RegionTransformationsHeaderProps) {
+  return (
+    <Stack
+      direction={"row"}
+      alignItems="center"
+      justifyContent={"space-between"}
+    >
+      <Typography variant="body1" gutterBottom>
+        {name}
+      </Typography>
+      <Stack direction={"row"}>
+        <IconButton onClick={onDeleteRegion}>
+          <DeleteIcon />
+        </IconButton>
+      </Stack>
+    </Stack>
+  );
+}
+
+interface RegionTransformationsBodyProps {
+  transformations: TransformToImage[];
+  setTransformations: (transformations: TransformToImage[]) => void;
+  results: TransformResult[];
+}
+
+function RegionTransformationsBody({
+  transformations,
+  setTransformations,
+  results,
+}: RegionTransformationsBodyProps) {
+  const firstTransformation = transformations[0];
+  const intermediateTransformations = transformations.slice(1);
+  const ocrResult = results[transformations.length];
+
+  return (
+    <Stack direction={"row"} justifyContent={"space-between"} spacing={2}>
+      <TransformationResult
+        transformation={firstTransformation.transformation.oneofKind}
+        result={results[0] ?? null}
+      />
+      <Stack
+        direction={"row"}
+        spacing={2}
+        overflow="auto"
+        alignItems={"center"}
+      >
+        <AddTransformationButton
+          setTransformation={(transformation) => {
+            const splicedTransformations = transformations;
+            splicedTransformations.splice(1, 0, transformation);
+            setTransformations([...splicedTransformations]);
+          }}
+        />
+        {intermediateTransformations.map((transformation, offsetIndex) => {
+          const actualIndex = offsetIndex + 1; // 1st transform not included in this map
+          const insertIndex = actualIndex + 1; // insert new after current
+          return (
+            <Fragment key={actualIndex}>
+              <TransformationResult
+                transformation={transformation.transformation.oneofKind}
+                result={results[actualIndex] ?? null}
+              />
+              <AddTransformationButton
+                setTransformation={(transformation) => {
+                  const splicedTransformations = transformations;
+                  splicedTransformations.splice(insertIndex, 0, transformation);
+                  setTransformations([...splicedTransformations]);
+                }}
+              />
+            </Fragment>
+          );
+        })}
+      </Stack>
+      <TransformationResult transformation="OCR" result={ocrResult ?? null} />
+    </Stack>
+  );
+}
+
 interface RegionTransformationsProps {
   region: Region;
   onUpdateRegion: (region: Region) => void;
@@ -128,58 +214,16 @@ function RegionTransformations({
 
   return (
     <Stack border={1} borderRadius={1} padding={2} spacing={1}>
-      <Stack
-        direction={"row"}
-        alignItems="center"
-        justifyContent={"space-between"}
-      >
-        <Typography variant="body1" gutterBottom>
-          {name}
-        </Typography>
-        <Stack direction={"row"}>
-          <IconButton onClick={onDeleteRegion}>
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
-      </Stack>
+      <RegionTransformationsHeader
+        name={name}
+        onDeleteRegion={onDeleteRegion}
+      />
       <Divider />
-      <Stack direction={"row"} justifyContent={"space-between"} spacing={2}>
-        <TransformationResult
-          transformation={transformations[0].transformation.oneofKind}
-          result={transformResults.at(0) ?? null}
-        />
-        <Stack
-          direction={"row"}
-          spacing={2}
-          overflow="auto"
-          alignItems={"center"}
-        >
-          <AddTransformationButton
-            setTransformation={(transformation) =>
-              setTransformations([transformation, ...transformations])
-            }
-          />
-          {transformations.slice(1).map((transformation, index) => (
-            <Fragment key={index}>
-              <TransformationResult
-                transformation={transformation.transformation.oneofKind}
-                result={transformResults.at(index + 1) ?? null}
-              />
-              <AddTransformationButton
-                setTransformation={(transformation) => {
-                  const splicedTransformations = transformations;
-                  splicedTransformations.splice(index + 1, 0, transformation);
-                  setTransformations([...splicedTransformations]);
-                }}
-              />
-            </Fragment>
-          ))}
-        </Stack>
-        <TransformationResult
-          transformation="OCR"
-          result={transformResults.at(-1) ?? null}
-        />
-      </Stack>
+      <RegionTransformationsBody
+        transformations={transformations}
+        setTransformations={setTransformations}
+        results={transformResults}
+      />
     </Stack>
   );
 }
