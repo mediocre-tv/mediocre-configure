@@ -33,29 +33,33 @@ function TransformationResult({
   result,
   onClick,
 }: TransformationResultProps) {
+  const imageOrText = result?.result && (
+    <Box display={"flex"} width={100} height={100} alignItems={"center"}>
+      {result.result instanceof Uint8Array ? (
+        <img
+          src={URL.createObjectURL(new Blob([result.result]))}
+          className={styles.image}
+        />
+      ) : (
+        <Typography maxHeight={1} width={1} overflow={"auto"}>
+          {result.result}
+        </Typography>
+      )}
+    </Box>
+  );
+
   return (
     <Stack spacing={1}>
       <Typography align={"center"}>{label}</Typography>
       {result?.result ? (
         <>
-          <Box
-            display={"flex"}
-            width={100}
-            height={100}
-            alignItems={"center"}
-            onClick={onClick}
-          >
-            {result.result instanceof Uint8Array ? (
-              <img
-                src={URL.createObjectURL(new Blob([result.result]))}
-                className={styles.image}
-              />
-            ) : (
-              <Typography maxHeight={1} width={1} overflow={"auto"}>
-                {result.result}
-              </Typography>
-            )}
-          </Box>
+          {onClick ? (
+            <IconButton onClick={onClick} sx={{ borderRadius: 2 }}>
+              {imageOrText}
+            </IconButton>
+          ) : (
+            imageOrText
+          )}
           <Typography
             align={"center"}
           >{`${result.elapsed.toFixed(3)}ms`}</Typography>
@@ -121,6 +125,14 @@ function RegionTransformationsBody({
     splicedTransformations.splice(index + 1, 0, transformation);
     setTransformations([...splicedTransformations]);
   };
+  const setTransformation = (
+    transformation: TransformToImage,
+    index: number,
+  ) => {
+    const splicedTransformations = transformations;
+    splicedTransformations.splice(index, 1, transformation);
+    setTransformations([...splicedTransformations]);
+  };
 
   return (
     <Stack direction={"row"} spacing={2}>
@@ -148,7 +160,11 @@ function RegionTransformationsBody({
             <RegionIntermediateTransformations
               key={actualIndex}
               result={results[actualIndex] ?? null}
+              previousResult={results[index] ?? null}
               transformation={transformation}
+              setTransformation={(transformation) =>
+                setTransformation(transformation, actualIndex)
+              }
               addTransformation={(transformation) =>
                 addTransformation(transformation, actualIndex)
               }
@@ -166,20 +182,33 @@ function RegionTransformationsBody({
 
 interface RegionIntermediateTransformationsProps {
   result: TransformResult | null;
+  previousResult: TransformResult | null;
   transformation: TransformToImage;
+  setTransformation: (transformation: TransformToImage) => void;
   addTransformation: (transformation: TransformToImage) => void;
 }
 
 function RegionIntermediateTransformations({
   result,
+  previousResult,
   transformation,
+  setTransformation,
   addTransformation,
 }: RegionIntermediateTransformationsProps) {
+  const [editIsOpen, setEditIsOpen] = useState(false);
+
   return (
     <>
       <TransformationResult
         label={transformation.transformation.oneofKind}
         result={result}
+        onClick={() => setEditIsOpen(true)}
+      />
+      <EditTransformationDialog
+        onSave={setTransformation}
+        isOpen={editIsOpen}
+        onClose={() => setEditIsOpen(false)}
+        previousResult={previousResult}
       />
       <AddTransformationButton
         addTransformation={addTransformation}
@@ -284,8 +313,8 @@ function AddTransformationButton({
       <IconButton size="small" onClick={open}>
         <AddCircleOutlineOutlinedIcon />
       </IconButton>
-      <AddTransformationDialog
-        addTransformation={addTransformation}
+      <EditTransformationDialog
+        onSave={addTransformation}
         isOpen={isOpen}
         onClose={close}
         previousResult={previousResult}
@@ -294,19 +323,19 @@ function AddTransformationButton({
   );
 }
 
-interface AddTransformationDialogProps {
-  addTransformation: (transformation: TransformToImage) => void;
+interface EditTransformationDialogProps {
   isOpen: boolean;
+  onSave: (transformation: TransformToImage) => void;
   onClose: () => void;
   previousResult: TransformResult | null;
 }
 
-function AddTransformationDialog({
-  addTransformation,
+function EditTransformationDialog({
   isOpen,
+  onSave,
   onClose,
   previousResult,
-}: AddTransformationDialogProps) {
+}: EditTransformationDialogProps) {
   const transformClient = useGrpcClient(TransformServiceClient);
   const [transformResult, setTransformResult] =
     useState<TransformResult | null>(null);
@@ -360,7 +389,7 @@ function AddTransformationDialog({
           <ProtobufEditor
             message={TransformToImage.create()}
             setMessage={(transformation) => {
-              addTransformation(transformation);
+              onSave(transformation);
               onClose();
             }}
             onCancel={onClose}
