@@ -41,16 +41,16 @@ export default function ProtobufEditor<T extends object>({
   const valid = messageType !== null && !error;
 
   return (
-    <FormControl>
-      <Box display={"flex"} justifyContent={"center"}>
-        <Stack spacing={3} minWidth={3 / 5}>
-          <Stack direction="row" justifyContent={"end"}>
-            <ProtobufEditorToggles
-              view={view}
-              setView={setView}
-              disabled={!valid}
-            />
-          </Stack>
+    <FormControl fullWidth>
+      <Stack spacing={3}>
+        <Stack direction="row" justifyContent={"end"}>
+          <ProtobufEditorToggles
+            view={view}
+            setView={setView}
+            disabled={!valid}
+          />
+        </Stack>
+        <Box minHeight={300}>
           {valid && view === "Form" ? (
             <ProtobufEditorForm
               message={newMessage}
@@ -68,18 +68,18 @@ export default function ProtobufEditor<T extends object>({
               />
             )
           )}
-          {!valid && (
-            <Box>
-              <Alert severity="error">{error ?? "Something went wrong"}</Alert>
-            </Box>
-          )}
-          <ProtobufEditorActions
-            onSave={() => setMessage(newMessage)}
-            onCancel={onCancel}
-            disabled={!valid}
-          />
-        </Stack>
-      </Box>
+        </Box>
+        {!valid && (
+          <Box>
+            <Alert severity="error">{error ?? "Something went wrong"}</Alert>
+          </Box>
+        )}
+        <ProtobufEditorActions
+          onSave={() => setMessage(newMessage)}
+          onCancel={onCancel}
+          disabled={!valid}
+        />
+      </Stack>
     </FormControl>
   );
 }

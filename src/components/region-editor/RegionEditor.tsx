@@ -2,9 +2,12 @@ import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
 import snapshotImage from "../../assets/snapshot.png";
 import useLocalState from "../../hooks/UseLocalState.tsx";
 import { Rectangle, Rectangles } from "../shapes/Rectangle.tsx";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Divider,
   IconButton,
   Skeleton,
@@ -23,6 +26,8 @@ import {
 } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
 import { crop, ocr } from "./Transform.ts";
 import DeleteIcon from "@mui/icons-material/Delete";
+import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
+import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
 
 interface RegionEditorLeftProps {
   image: string;
@@ -120,16 +125,8 @@ function RegionTransformations({
 
   const firstTransformation = useMemo(() => crop(rectangle), [rectangle]);
   const lastTransformation = useMemo(() => ocr(), []);
-  const transformations: TransformToImage[] = useMemo(
-    () => [
-      crop({
-        x: 0,
-        y: 0,
-        width: rectangle.width,
-        height: rectangle.height,
-      }),
-    ],
-    [rectangle],
+  const [transformations, setTransformations] = useState<TransformToImage[]>(
+    [],
   );
 
   useEffect(() => {
@@ -207,13 +204,31 @@ function RegionTransformations({
           transformation={firstTransformation.transformation.oneofKind}
           result={transformResults.at(0) ?? null}
         />
-        <Stack direction={"row"} spacing={2} overflow="auto">
+        <Stack
+          direction={"row"}
+          spacing={2}
+          overflow="auto"
+          alignItems={"center"}
+        >
+          <AddTransformationButton
+            setTransformation={(transformation) =>
+              setTransformations([transformation, ...transformations])
+            }
+          />
           {transformations.map((transformation, index) => (
-            <TransformationResult
-              key={index}
-              transformation={transformation.transformation.oneofKind}
-              result={transformResults.at(index + 1) ?? null}
-            />
+            <Fragment key={index}>
+              <TransformationResult
+                transformation={transformation.transformation.oneofKind}
+                result={transformResults.at(index + 1) ?? null}
+              />
+              <AddTransformationButton
+                setTransformation={(transformation) => {
+                  const splicedTransformations = transformations;
+                  splicedTransformations.splice(index + 1, 0, transformation);
+                  setTransformations([...splicedTransformations]);
+                }}
+              />
+            </Fragment>
           ))}
         </Stack>
         <TransformationResult
@@ -222,6 +237,39 @@ function RegionTransformations({
         />
       </Stack>
     </Stack>
+  );
+}
+
+interface AddTransformationButtonProps {
+  setTransformation: (transformation: TransformToImage) => void;
+}
+
+function AddTransformationButton({
+  setTransformation,
+}: AddTransformationButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const open = () => setIsOpen(true);
+  const close = () => setIsOpen(false);
+
+  return (
+    <Box>
+      <IconButton size="small" onClick={open}>
+        <AddCircleOutlineOutlinedIcon />
+      </IconButton>
+      <Dialog onClose={close} open={isOpen} fullWidth maxWidth="sm">
+        <DialogTitle>Add a transformation</DialogTitle>
+        <DialogContent>
+          <ProtobufEditor
+            message={TransformToImage.create()}
+            setMessage={(transformation) => {
+              setTransformation(transformation);
+              close();
+            }}
+            onCancel={close}
+          />
+        </DialogContent>
+      </Dialog>
+    </Box>
   );
 }
 
