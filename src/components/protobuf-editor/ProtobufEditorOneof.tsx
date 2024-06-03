@@ -165,6 +165,7 @@ function ProtobufEditorOneofField<T>({
             label={selectLabel}
             value={kind}
             onChange={onChangeKind}
+            sx={{ textAlign: "center" }}
           >
             {kinds.map((kind) => (
               <MenuItem key={kind} value={kind}>
