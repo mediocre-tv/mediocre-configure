@@ -1,5 +1,11 @@
 import { Switch, TextField } from "@mui/material";
 import { ChangeEvent } from "react";
+import { TextFieldProps } from "@mui/material/TextField";
+
+const commonTextFieldProps: TextFieldProps = {
+  fullWidth: true,
+  InputProps: { inputProps: { style: { textAlign: "center" } } },
+};
 
 interface InputBaseProps<T> {
   id: string;
@@ -19,7 +25,14 @@ export function IntInput({ setValue, ...otherProps }: IntInputProps) {
     }
   };
 
-  return <TextField {...otherProps} type="number" onChange={onChange} />;
+  return (
+    <TextField
+      {...otherProps}
+      {...commonTextFieldProps}
+      type="number"
+      onChange={onChange}
+    />
+  );
 }
 
 interface FloatInputProps extends InputBaseProps<number> {}
@@ -32,7 +45,14 @@ export function FloatInput({ setValue, ...otherProps }: FloatInputProps) {
     }
   };
 
-  return <TextField {...otherProps} type="number" onChange={onChange} />;
+  return (
+    <TextField
+      {...otherProps}
+      {...commonTextFieldProps}
+      type="number"
+      onChange={onChange}
+    />
+  );
 }
 
 interface BigIntInputProps extends InputBaseProps<bigint> {}
@@ -43,7 +63,14 @@ export function BigIntInput({ setValue, ...otherProps }: BigIntInputProps) {
     setValue(bigInt);
   };
 
-  return <TextField {...otherProps} type="number" onChange={onChange} />;
+  return (
+    <TextField
+      {...otherProps}
+      {...commonTextFieldProps}
+      type="number"
+      onChange={onChange}
+    />
+  );
 }
 
 interface BooleanInputProps extends InputBaseProps<boolean> {}
@@ -62,5 +89,12 @@ export function StringInput({ setValue, ...otherProps }: StringInputProps) {
     setValue(event.target.value);
   };
 
-  return <TextField {...otherProps} type="text" onChange={onChange} />;
+  return (
+    <TextField
+      {...otherProps}
+      {...commonTextFieldProps}
+      type="text"
+      onChange={onChange}
+    />
+  );
 }
