@@ -33,7 +33,7 @@ function TransformationResult({
   result,
   onClick,
 }: TransformationResultProps) {
-  const imageOrText = result?.result && (
+  const imageOrText = result && result.result !== null && (
     <Box display={"flex"} width={100} height={100} alignItems={"center"}>
       {result.result instanceof Uint8Array ? (
         <img
@@ -41,8 +41,12 @@ function TransformationResult({
           className={styles.image}
         />
       ) : (
-        <Typography maxHeight={1} width={1} overflow={"auto"}>
-          {result.result}
+        <Typography maxHeight={1} width={1} overflow={"auto"} component="div">
+          {result.result !== "" ? (
+            result.result
+          ) : (
+            <Box sx={{ fontStyle: "italic" }}>Empty</Box>
+          )}
         </Typography>
       )}
     </Box>
@@ -51,7 +55,7 @@ function TransformationResult({
   return (
     <Stack spacing={1}>
       <Typography align={"center"}>{label}</Typography>
-      {result?.result ? (
+      {result && result.result !== null ? (
         <>
           {onClick ? (
             <IconButton onClick={onClick} sx={{ borderRadius: 2 }}>
