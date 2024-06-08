@@ -120,7 +120,7 @@ export default function ImageLabeller({
           image={canvasImage}
           rectangles={rectangles}
           setRectangles={setRectangles}
-          onSelectRectangle={onSelectRectangle}
+          onSelectRectangle={onSelectRectangle ? onSelectRectangle : () => {}}
         />
       ) : canvasImageStatus ? (
         <CircularProgress></CircularProgress>
