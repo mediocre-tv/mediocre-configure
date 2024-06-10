@@ -209,7 +209,8 @@ function RegionIntermediateTransformations({
         onClick={() => setEditIsOpen(true)}
       />
       <EditTransformationDialog
-        onSave={setTransformation}
+        transformation={transformation}
+        setTransformation={setTransformation}
         isOpen={editIsOpen}
         onClose={() => setEditIsOpen(false)}
         previousResult={previousResult}
@@ -318,7 +319,8 @@ function AddTransformationButton({
         <AddCircleOutlineOutlinedIcon />
       </IconButton>
       <EditTransformationDialog
-        onSave={addTransformation}
+        transformation={TransformToImage.create()}
+        setTransformation={addTransformation}
         isOpen={isOpen}
         onClose={close}
         previousResult={previousResult}
@@ -329,14 +331,16 @@ function AddTransformationButton({
 
 interface EditTransformationDialogProps {
   isOpen: boolean;
-  onSave: (transformation: TransformToImage) => void;
+  transformation: TransformToImage;
+  setTransformation: (transformation: TransformToImage) => void;
   onClose: () => void;
   previousResult: TransformResult | null;
 }
 
 function EditTransformationDialog({
   isOpen,
-  onSave,
+  transformation,
+  setTransformation,
   onClose,
   previousResult,
 }: EditTransformationDialogProps) {
@@ -391,9 +395,9 @@ function EditTransformationDialog({
             <TransformationResult label="After" result={transformResult} />
           </Stack>
           <ProtobufEditor
-            message={TransformToImage.create()}
+            message={TransformToImage.create(transformation)}
             setMessage={(transformation) => {
-              onSave(transformation);
+              setTransformation(transformation);
               onClose();
             }}
             onCancel={onClose}
