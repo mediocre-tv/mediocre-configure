@@ -11,7 +11,7 @@ import {
   StringInput,
 } from "./ProtobufEditorFieldInputs.tsx";
 import { ProtobufEditorMessage } from "./ProtobufEditorMessage.tsx";
-import { MediocreOptions } from "../../../../mediocre-service/@buf/typescript/mediocre/options/v1beta/options_pb";
+import { MediocreOptions } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/options/v1beta/options_pb";
 
 const optionsKey = MediocreOptions.typeName
   .split(".")

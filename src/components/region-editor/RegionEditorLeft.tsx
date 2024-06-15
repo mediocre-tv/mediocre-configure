@@ -1,7 +1,7 @@
 import { Rectangle, Rectangles } from "../shapes/Rectangle.tsx";
 import { Stack } from "@mui/material";
 import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
-import { Region } from "../../../../mediocre-service/@buf/typescript/mediocre/configuration/v1beta/configuration_pb";
+import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
 import { crop } from "./Transform.ts";
 
 interface RegionEditorLeftProps {

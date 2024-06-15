@@ -12,13 +12,13 @@ import {
   useTheme,
 } from "@mui/material";
 import styles from "./RegionEditor.module.css";
-import { Region } from "../../../../mediocre-service/@buf/typescript/mediocre/configuration/v1beta/configuration_pb";
+import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
 import { useEffect, useState } from "react";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
-import { TransformToImage } from "../../../../mediocre-service/@buf/typescript/mediocre/image/transform/v1beta/transform_pb";
+import { TransformToImage } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
 import { useGrpcClient } from "../grpc/GrpcContext.ts";
-import { TransformServiceClient } from "../../../../mediocre-service/@buf/typescript/mediocre/image/transform/v1beta/transform_pb.client";
+import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb.client";
 import { ocr } from "./Transform.ts";
 import DeleteIcon from "@mui/icons-material/Delete";
 
