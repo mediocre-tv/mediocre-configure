@@ -1,4 +1,4 @@
-import { Switch, TextField } from "@mui/material";
+import { Slider, Switch, TextField } from "@mui/material";
 import { ChangeEvent } from "react";
 import { TextFieldProps } from "@mui/material/TextField";
 
@@ -31,6 +31,40 @@ export function IntInput({ setValue, ...otherProps }: IntInputProps) {
       {...commonTextFieldProps}
       type="number"
       onChange={onChange}
+    />
+  );
+}
+
+interface SliderInputProps extends InputBaseProps<number> {
+  min: number;
+  max: number;
+  step?: number;
+  shiftStep?: number;
+}
+
+export function SliderInput({
+  min,
+  max,
+  step,
+  shiftStep,
+  setValue,
+  ...otherProps
+}: SliderInputProps) {
+  const onChange = (_: Event, value: number | number[]) => {
+    if (typeof value === "number") {
+      setValue(value);
+    }
+  };
+
+  return (
+    <Slider
+      {...otherProps}
+      onChange={onChange}
+      min={min}
+      max={max}
+      step={step}
+      shiftStep={shiftStep}
+      valueLabelDisplay="auto"
     />
   );
 }

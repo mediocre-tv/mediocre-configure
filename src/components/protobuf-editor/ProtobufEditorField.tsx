@@ -1,15 +1,31 @@
 import { FieldInfo, LongType, ScalarType } from "@protobuf-ts/runtime";
-import { Alert, Box } from "@mui/material";
+import { Alert, Box, Stack } from "@mui/material";
 import { useId } from "react";
-import { capitalCase } from "change-case";
+import { capitalCase, snakeCase } from "change-case";
 import {
   BigIntInput,
   BooleanInput,
   FloatInput,
   IntInput,
+  SliderInput,
   StringInput,
 } from "./ProtobufEditorFieldInputs.tsx";
 import { ProtobufEditorMessage } from "./ProtobufEditorMessage.tsx";
+import { MediocreOptions } from "../../../../mediocre-service/@buf/typescript/mediocre/options/v1beta/options_pb";
+
+const optionsKey = MediocreOptions.typeName
+  .split(".")
+  .map((name) => snakeCase(name))
+  .join(".");
+
+function getOptions(info: FieldInfo) {
+  if (!info.options) {
+    return null;
+  }
+
+  // not particularly safe, but we're expecting this type
+  return info.options[optionsKey] as MediocreOptions;
+}
 
 interface ProtobufEditorFieldProps<T> {
   name: string;
@@ -29,6 +45,7 @@ export function ProtobufEditorField<T>({
   const id = useId();
   const required = !info.opt;
   const label = capitalCase(name);
+  const options = getOptions(info);
 
   if (info.kind === "message") {
     const messageType = info.T();
@@ -56,6 +73,7 @@ export function ProtobufEditorField<T>({
           label={label}
           value={value}
           setValue={setValue}
+          options={options}
         />
       </Box>
     );
@@ -76,6 +94,7 @@ interface ProtobufEditorFieldScalarInputProps<T> {
   label: string;
   value: T;
   setValue: (value: T) => void;
+  options: MediocreOptions | null;
 }
 
 function ProtobufEditorFieldScalarInput<T>({
@@ -83,17 +102,31 @@ function ProtobufEditorFieldScalarInput<T>({
   longType,
   value,
   setValue,
+  options,
   ...commonProps
 }: ProtobufEditorFieldScalarInputProps<T>) {
   // unsure how safe this component really is
 
   if (scalarType === ScalarType.DOUBLE || scalarType === ScalarType.FLOAT) {
     return (
-      <FloatInput
-        {...commonProps}
-        value={value as number}
-        setValue={(value) => setValue(value as T)}
-      />
+      <Stack direction="row" alignItems="center" spacing={2}>
+        <FloatInput
+          {...commonProps}
+          value={value as number}
+          setValue={(value) => setValue(value as T)}
+        />
+        {options && options.min !== undefined && options.max !== undefined && (
+          <SliderInput
+            {...commonProps}
+            value={value as number}
+            setValue={(value) => setValue(value as T)}
+            min={options.min}
+            max={options.max}
+            step={0.1}
+            shiftStep={10}
+          />
+        )}
+      </Stack>
     );
   }
 
@@ -108,6 +141,19 @@ function ProtobufEditorFieldScalarInput<T>({
   }
 
   if (longType === undefined || longType === LongType.NUMBER) {
+    if (options && options.min !== undefined && options.max !== undefined) {
+      return (
+        <SliderInput
+          {...commonProps}
+          value={value as number}
+          setValue={(value) => setValue(value as T)}
+          min={options.min}
+          max={options.max}
+          step={1}
+          shiftStep={10}
+        />
+      );
+    }
     return (
       <IntInput
         {...commonProps}
