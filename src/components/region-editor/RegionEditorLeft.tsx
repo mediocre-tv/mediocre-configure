@@ -31,7 +31,12 @@ export function RegionEditorLeft({
 }
 
 function getRegionRectangle(region: Region): Rectangle | null {
-  const transformation = region.transformations[0]?.transformation;
+  const transformations = region.transformations;
+  if (!transformations || !transformations.length) {
+    return null;
+  }
+
+  const transformation = transformations[0]?.transformation;
   if (transformation.oneofKind !== "crop") {
     return null;
   }
