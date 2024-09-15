@@ -139,7 +139,7 @@ function RegionTransformationsBody({
   };
 
   return (
-    <Stack direction={"row"} spacing={2}>
+    <Stack direction={"row"} spacing={2} justifyContent={"space-between"}>
       <TransformationResult
         label={transformations[0].transformation.oneofKind}
         result={results[0] ?? null}
@@ -149,8 +149,6 @@ function RegionTransformationsBody({
         spacing={2}
         overflow="auto"
         alignItems={"center"}
-        justifyContent={"space-evenly"}
-        width={1}
       >
         <AddTransformationButton
           addTransformation={(transformation) =>
