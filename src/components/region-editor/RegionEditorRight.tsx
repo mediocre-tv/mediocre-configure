@@ -244,42 +244,51 @@ function RegionTransformations({
   const { name, transformations } = region;
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     async function transform(
       imageData: Uint8Array,
       client: TransformServiceClient,
       transformations: TransformToImage[],
     ) {
-      const transform = client.transform({
-        image: {
-          blob: {
-            data: imageData,
+      const transform = client.transform(
+        {
+          image: {
+            blob: {
+              data: imageData,
+            },
           },
+          imageTransformations: transformations,
+          otherTransformation: ocr(),
         },
-        imageTransformations: transformations,
-        otherTransformation: ocr(),
-      });
+        { abort: abortController.signal },
+      );
 
+      const results: TransformResult[] = [];
       for await (const { transformed, elapsed } of transform.responses) {
         if (transformed.oneofKind === "image") {
           const data = transformed.image.blob?.data;
           if (data) {
-            const result: TransformResult = { result: data, elapsed: elapsed };
-            setTransformResults((results) => [...results, result]);
+            results.push({ result: data, elapsed: elapsed });
           }
         } else if (transformed.oneofKind === "characters") {
-          const result: TransformResult = {
+          results.push({
             result: transformed.characters,
             elapsed: elapsed,
-          };
-          setTransformResults((results) => [...results, result]);
+          });
         }
       }
+
+      setTransformResults(results);
     }
 
     if (imageData && transformClient) {
-      setTransformResults([]);
       transform(imageData, transformClient, transformations);
     }
+
+    return () => {
+      abortController.abort();
+    };
   }, [imageData, transformClient, transformations]);
 
   return (
