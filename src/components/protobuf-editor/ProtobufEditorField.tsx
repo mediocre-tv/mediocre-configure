@@ -11,7 +11,7 @@ import {
   StringInput,
 } from "./ProtobufEditorFieldInputs.tsx";
 import { ProtobufEditorMessage } from "./ProtobufEditorMessage.tsx";
-import { MediocreOptions } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/options/v1beta/options_pb";
+import { MediocreFieldOptions } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/options/v1beta/options_pb";
 import { getOptions } from "./ProtobufEditorOptions.ts";
 
 interface ProtobufEditorFieldProps<T> {
@@ -81,7 +81,7 @@ interface ProtobufEditorFieldScalarInputProps<T> {
   label: string;
   value: T;
   setValue: (value: T) => void;
-  options: MediocreOptions | null;
+  options: MediocreFieldOptions | null;
 }
 
 function ProtobufEditorFieldScalarInput<T>({
