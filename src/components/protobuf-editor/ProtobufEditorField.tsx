@@ -1,7 +1,7 @@
 import { FieldInfo, LongType, ScalarType } from "@protobuf-ts/runtime";
 import { Alert, Box, Stack } from "@mui/material";
 import { useId } from "react";
-import { capitalCase, snakeCase } from "change-case";
+import { capitalCase } from "change-case";
 import {
   BigIntInput,
   BooleanInput,
@@ -12,20 +12,7 @@ import {
 } from "./ProtobufEditorFieldInputs.tsx";
 import { ProtobufEditorMessage } from "./ProtobufEditorMessage.tsx";
 import { MediocreOptions } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/options/v1beta/options_pb";
-
-const optionsKey = MediocreOptions.typeName
-  .split(".")
-  .map((name) => snakeCase(name))
-  .join(".");
-
-function getOptions(info: FieldInfo) {
-  if (!info.options) {
-    return null;
-  }
-
-  // not particularly safe, but we're expecting this type
-  return info.options[optionsKey] as MediocreOptions;
-}
+import { getOptions } from "./ProtobufEditorOptions.ts";
 
 interface ProtobufEditorFieldProps<T> {
   name: string;
