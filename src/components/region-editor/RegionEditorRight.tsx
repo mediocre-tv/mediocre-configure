@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import styles from "./RegionEditor.module.css";
 import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
 import { TransformToImage } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
@@ -21,6 +21,7 @@ import { useGrpcClient } from "../grpc/GrpcContext.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb.client";
 import { ocr } from "./Transform.ts";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { Dimensions } from "../shapes/Dimensions.ts";
 
 interface TransformationResultProps {
   label?: string;
@@ -33,12 +34,29 @@ function TransformationResult({
   result,
   onClick,
 }: TransformationResultProps) {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [imageDimensions, setImageDimensions] = useState<Dimensions | null>(
+    null,
+  );
+
+  const footerText = imageDimensions
+    ? `${imageDimensions.width} x ${imageDimensions.height}`
+    : "Text";
+
   const imageOrText = result && result.result !== null && (
     <Box display={"flex"} width={100} height={100} alignItems={"center"}>
       {result.result instanceof Uint8Array ? (
         <img
+          ref={imgRef}
           src={URL.createObjectURL(new Blob([result.result]))}
           className={styles.image}
+          onLoad={() =>
+            imgRef.current &&
+            setImageDimensions({
+              width: imgRef.current.naturalWidth,
+              height: imgRef.current.naturalHeight,
+            })
+          }
         />
       ) : (
         <Typography maxHeight={1} width={1} overflow={"auto"} component="div">
@@ -64,6 +82,7 @@ function TransformationResult({
           ) : (
             imageOrText
           )}
+          <Typography align={"center"}>{footerText}</Typography>
           <Typography
             align={"center"}
           >{`${result.elapsed.toFixed(3)}ms`}</Typography>
