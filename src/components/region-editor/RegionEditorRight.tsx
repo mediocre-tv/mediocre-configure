@@ -50,13 +50,20 @@ function TransformationResult({
           ref={imgRef}
           src={URL.createObjectURL(new Blob([result.result]))}
           className={styles.image}
-          onLoad={() =>
-            imgRef.current &&
-            setImageDimensions({
-              width: imgRef.current.naturalWidth,
-              height: imgRef.current.naturalHeight,
-            })
-          }
+          onLoad={() => {
+            if (imgRef.current) {
+              const newDimensions = {
+                width: imgRef.current.naturalWidth,
+                height: imgRef.current.naturalHeight,
+              };
+              if (
+                imageDimensions?.width !== newDimensions.width &&
+                imageDimensions?.height !== newDimensions.height
+              ) {
+                setImageDimensions(newDimensions);
+              }
+            }
+          }}
         />
       ) : (
         <Typography maxHeight={1} width={1} overflow={"auto"} component="div">
