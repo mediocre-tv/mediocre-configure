@@ -8,7 +8,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   containsMessageType,
   IMessageType,
@@ -34,6 +34,7 @@ export default function ProtobufEditor<T extends object>({
   onPreview,
 }: ProtobufEditorProps<T>) {
   const [newMessage, setNewMessage] = useState(message);
+  const [hasPreview, setHasPreview] = useState(false);
   const [view, setView] = useState<ProtobufEditorView>("Form");
   const messageType = containsMessageType(message)
     ? message[MESSAGE_TYPE]
@@ -46,6 +47,13 @@ export default function ProtobufEditor<T extends object>({
     setNewMessage(message);
     onPreview(message);
   };
+
+  useEffect(() => {
+    if (!hasPreview) {
+      onPreview(newMessage);
+      setHasPreview(true);
+    }
+  }, [hasPreview, newMessage, onPreview]);
 
   return (
     <FormControl fullWidth>
