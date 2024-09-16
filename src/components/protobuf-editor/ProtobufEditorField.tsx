@@ -105,7 +105,7 @@ function ProtobufEditorFieldScalarInput<T>({
         {options && options.min !== undefined && options.max !== undefined && (
           <SliderInput
             {...commonProps}
-            value={value as number}
+            value={value as number | number[]}
             setValue={(value) => setValue(value as T)}
             min={options.min}
             max={options.max}
@@ -132,7 +132,7 @@ function ProtobufEditorFieldScalarInput<T>({
       return (
         <SliderInput
           {...commonProps}
-          value={value as number}
+          value={value as number | number[]}
           setValue={(value) => setValue(value as T)}
           min={options.min}
           max={options.max}

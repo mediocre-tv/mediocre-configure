@@ -35,7 +35,7 @@ export function IntInput({ setValue, ...otherProps }: IntInputProps) {
   );
 }
 
-interface SliderInputProps extends InputBaseProps<number> {
+interface SliderInputProps extends InputBaseProps<number | number[]> {
   min: number;
   max: number;
   step?: number;
@@ -51,9 +51,7 @@ export function SliderInput({
   ...otherProps
 }: SliderInputProps) {
   const onChange = (_: Event, value: number | number[]) => {
-    if (typeof value === "number") {
-      setValue(value);
-    }
+    setValue(value);
   };
 
   return (
