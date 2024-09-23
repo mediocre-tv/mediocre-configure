@@ -22,6 +22,7 @@ import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm
 import { ocr } from "./Transform.ts";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Dimensions } from "../shapes/Dimensions.ts";
+import { isRpcError } from "../grpc/GrpcHealth.ts";
 
 interface TransformationResultProps {
   label?: string;
@@ -92,7 +93,7 @@ function TransformationResult({
           <Typography align={"center"}>{footerText}</Typography>
           <Typography
             align={"center"}
-          >{`${result.elapsed.toFixed(3)}ms`}</Typography>
+          >{`${result.elapsed ? result.elapsed.toFixed(3) : "unknown "}ms`}</Typography>
         </>
       ) : (
         <>
@@ -106,7 +107,7 @@ function TransformationResult({
 
 interface TransformResult {
   result: Uint8Array | string | null;
-  elapsed: number;
+  elapsed: number | null;
 }
 
 interface RegionTransformationsHeaderProps {
@@ -291,18 +292,29 @@ function RegionTransformations({
       );
 
       const results: TransformResult[] = [];
-      for await (const { transformed, elapsed } of transform.responses) {
-        if (transformed.oneofKind === "image") {
-          const data = transformed.image.blob?.data;
-          if (data) {
-            results.push({ result: data, elapsed: elapsed });
+
+      try {
+        for await (const { transformed, elapsed } of transform.responses) {
+          if (transformed.oneofKind === "image") {
+            const data = transformed.image.blob?.data;
+            if (data) {
+              results.push({ result: data, elapsed: elapsed });
+            }
+          } else if (transformed.oneofKind === "characters") {
+            results.push({
+              result: transformed.characters,
+              elapsed: elapsed,
+            });
           }
-        } else if (transformed.oneofKind === "characters") {
-          results.push({
-            result: transformed.characters,
-            elapsed: elapsed,
-          });
         }
+      } catch (error) {
+        let errorMessage;
+        if (isRpcError(error)) {
+          errorMessage = error.message || error.code;
+        } else {
+          errorMessage = "Unknown error";
+        }
+        results.push({ result: errorMessage, elapsed: null });
       }
 
       setTransformResults(results);
