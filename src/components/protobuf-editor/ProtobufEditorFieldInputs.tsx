@@ -1,5 +1,5 @@
 import { Slider, Switch, TextField } from "@mui/material";
-import { ChangeEvent } from "react";
+import { ChangeEvent, useEffect } from "react";
 import { TextFieldProps } from "@mui/material/TextField";
 
 const commonTextFieldProps: TextFieldProps = {
@@ -54,6 +54,12 @@ export function SliderInput({
   const onChange = (_: Event, value: number | number[]) => {
     setValue(value);
   };
+
+  useEffect(() => {
+    if (Array.isArray(value) && value.length === 0) {
+      setValue([min, max]);
+    }
+  }, [max, min, setValue, value]);
 
   return (
     <Slider
