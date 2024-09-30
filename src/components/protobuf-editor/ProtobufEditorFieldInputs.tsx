@@ -47,6 +47,7 @@ export function SliderInput({
   max,
   step,
   shiftStep,
+  value,
   setValue,
   ...otherProps
 }: SliderInputProps) {
@@ -58,6 +59,7 @@ export function SliderInput({
     <Slider
       {...otherProps}
       onChange={onChange}
+      value={value}
       min={min}
       max={max}
       step={step}
