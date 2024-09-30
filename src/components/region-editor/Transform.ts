@@ -22,7 +22,12 @@ export function ocr(): TransformToOther {
   return {
     transformation: {
       oneofKind: "getCharacters",
-      getCharacters: {},
+      getCharacters: {
+        params: {
+          oneofKind: "tesseractParams",
+          tesseractParams: {},
+        },
+      },
     },
   };
 }
