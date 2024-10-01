@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -7,13 +8,14 @@ import {
   IconButton,
   Skeleton,
   Stack,
+  TextField,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import styles from "./RegionEditor.module.css";
 import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
-import { useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
 import { TransformToImage } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
@@ -21,6 +23,7 @@ import { useGrpcClient } from "../grpc/GrpcContext.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb.client";
 import { ocr } from "./Transform.ts";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { Dimensions } from "../shapes/Dimensions.ts";
 import { isRpcError } from "../grpc/GrpcHealth.ts";
 
@@ -110,13 +113,63 @@ interface TransformResult {
   elapsed: number | null;
 }
 
+interface RegionTransformationsHeaderNameProps {
+  name: string;
+  setName: (name: string) => void;
+}
+
+function RegionTransformationsHeaderName({
+  name,
+  setName,
+}: RegionTransformationsHeaderNameProps) {
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState(name);
+
+  const nameAndButton = (
+    <Stack direction={"row"} alignItems={"center"} gap={1}>
+      {name}
+      <IconButton onClick={() => setIsRenaming(true)}>
+        <EditIcon />
+      </IconButton>
+    </Stack>
+  );
+
+  const renameForm = (
+    <form
+      onSubmit={() => {
+        setIsRenaming(false);
+        setName(newName);
+      }}
+    >
+      <Stack direction={"row"}>
+        <TextField
+          value={newName}
+          onChange={(event: ChangeEvent<HTMLInputElement>) => {
+            setNewName(event.target.value);
+          }}
+          autoFocus={true}
+        />
+        <Button type="submit">Save</Button>
+      </Stack>
+    </form>
+  );
+
+  return (
+    <Typography variant="body1" gutterBottom>
+      {isRenaming ? renameForm : nameAndButton}
+    </Typography>
+  );
+}
+
 interface RegionTransformationsHeaderProps {
   name: string;
+  onRenameRegion: (name: string) => void;
   onDeleteRegion: () => void;
 }
 
 function RegionTransformationsHeader({
   name,
+  onRenameRegion,
   onDeleteRegion,
 }: RegionTransformationsHeaderProps) {
   return (
@@ -125,9 +178,7 @@ function RegionTransformationsHeader({
       alignItems="center"
       justifyContent={"space-between"}
     >
-      <Typography variant="body1" gutterBottom>
-        {name}
-      </Typography>
+      <RegionTransformationsHeaderName name={name} setName={onRenameRegion} />
       <Stack direction={"row"}>
         <IconButton onClick={onDeleteRegion}>
           <DeleteIcon />
@@ -267,6 +318,7 @@ function RegionTransformations({
   );
   const setTransformations = (transformations: TransformToImage[]) =>
     onUpdateRegion({ ...region, transformations });
+  const setName = (name: string) => onUpdateRegion({ ...region, name });
 
   const { name, transformations } = region;
 
@@ -333,6 +385,7 @@ function RegionTransformations({
     <Stack border={1} borderRadius={1} padding={2} spacing={1}>
       <RegionTransformationsHeader
         name={name}
+        onRenameRegion={setName}
         onDeleteRegion={onDeleteRegion}
       />
       <Divider />
