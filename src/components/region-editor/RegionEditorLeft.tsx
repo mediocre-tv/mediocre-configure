@@ -86,7 +86,11 @@ function setRegionRectangles(
   const newRegions: Region[] = Object.entries(rectangles)
     .filter(([id]) => !regions.find((region) => region.id === id))
     .map(([id, rectangle]) => {
-      return Region.create({ id: id, transformations: [crop(rectangle)] });
+      return Region.create({
+        id: id,
+        name: `Region ${regions.length + 1}`,
+        transformations: [crop(rectangle)],
+      });
     });
   setRegions([...updatedRegions, ...newRegions]);
 }
