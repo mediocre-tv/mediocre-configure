@@ -18,13 +18,13 @@ import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/med
 import { ChangeEvent, Fragment, useEffect, useRef, useState } from "react";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
-import { useGrpcClient } from "../grpc/GrpcContext.ts";
+import { useGrpcClient, useTransformClient } from "../grpc/GrpcContext.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb.client";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { Dimensions } from "../shapes/Dimensions.ts";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
-import { transform, TransformResult } from "./Transform.ts";
+import { TransformResult, transformSingle } from "./Transform.ts";
 
 interface TransformationResultProps {
   label: string;
@@ -288,32 +288,11 @@ function RegionTransformations({
   onDeleteRegion,
   imageData,
 }: RegionTransformationsProps) {
-  const transformClient = useGrpcClient(TransformServiceClient);
-  const [transformResults, setTransformResults] = useState<TransformResult[]>(
-    [],
-  );
+  const { name, transformations } = region;
+  const transformResults = useTransformClient(imageData, transformations);
   const setTransformations = (transformations: Transform[]) =>
     onUpdateRegion({ ...region, transformations });
   const setName = (name: string) => onUpdateRegion({ ...region, name });
-
-  const { name, transformations } = region;
-
-  useEffect(() => {
-    const abortController = new AbortController();
-
-    if (imageData && transformClient) {
-      transform(
-        imageData,
-        transformClient,
-        transformations,
-        abortController,
-      ).then(setTransformResults);
-    }
-
-    return () => {
-      abortController.abort();
-    };
-  }, [imageData, transformClient, transformations]);
 
   return (
     <Stack border={1} borderRadius={1} padding={2} spacing={1}>
@@ -383,23 +362,18 @@ function EditTransformationDialog({
 
   const onPreview = async (transformation: Transform) => {
     if (
-      !transformClient ||
-      !previousResult?.result ||
-      !(previousResult.result instanceof Uint8Array)
+      transformClient &&
+      previousResult?.result &&
+      previousResult.result instanceof Uint8Array
     ) {
-      return;
+      setTransformResult(null);
+      const result = await transformSingle(
+        previousResult.result,
+        transformClient,
+        transformation,
+      );
+      setTransformResult(result);
     }
-
-    setTransformResult(null);
-
-    const result = await transform(
-      previousResult.result,
-      transformClient,
-      [transformation],
-      new AbortController(),
-    );
-
-    setTransformResult(result[0]);
   };
 
   return (

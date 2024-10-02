@@ -50,7 +50,7 @@ export async function transform(
   imageData: Uint8Array,
   client: TransformServiceClient,
   transformations: Transform[],
-  abortController: AbortController,
+  abortController?: AbortController,
 ) {
   const transform = client.transform(
     {
@@ -61,7 +61,7 @@ export async function transform(
       },
       transformations: transformations,
     },
-    { abort: abortController.signal },
+    { abort: abortController?.signal },
   );
 
   const results: TransformResult[] = [];
@@ -91,4 +91,15 @@ export async function transform(
   }
 
   return results;
+}
+
+export async function transformSingle(
+  imageData: Uint8Array,
+  client: TransformServiceClient,
+  transformations: Transform,
+  abortController?: AbortController,
+) {
+  return (
+    await transform(imageData, client, [transformations], abortController)
+  )[0];
 }

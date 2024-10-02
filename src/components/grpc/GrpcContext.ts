@@ -1,6 +1,9 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
+import { transform, TransformResult } from "../region-editor/Transform.ts";
+import { TransformServiceClient } from "../../../../mediocre-service/@buf/typescript/mediocre/image/transform/v1beta/transform_pb.client";
+import { Transform } from "../../../../mediocre-service/@buf/typescript/mediocre/image/transform/v1beta/transform_pb";
 
 export interface GrpcContextProps {
   domain: string;
@@ -26,4 +29,30 @@ export function useGrpcClient<T extends ServiceInfo>(
       return new clientConstructor(transport);
     }
   }, [context, clientConstructor]);
+}
+
+export function useTransformClient(
+  imageData: Uint8Array | null,
+  transformations: Transform[],
+) {
+  const client = useGrpcClient(TransformServiceClient);
+  const [transformResults, setTransformResults] = useState<TransformResult[]>(
+    [],
+  );
+
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    if (imageData && client) {
+      transform(imageData, client, transformations, abortController).then(
+        setTransformResults,
+      );
+    }
+
+    return () => {
+      abortController.abort();
+    };
+  }, [imageData, client, transformations]);
+
+  return transformResults;
 }
