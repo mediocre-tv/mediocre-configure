@@ -25,6 +25,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import { Dimensions } from "../shapes/Dimensions.ts";
 import { isRpcError } from "../grpc/GrpcHealth.ts";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
+import { transform, TransformResult } from "./Transform.ts";
 
 interface TransformationResultProps {
   label: string;
@@ -353,54 +354,13 @@ function RegionTransformations({
   useEffect(() => {
     const abortController = new AbortController();
 
-    async function transform(
-      imageData: Uint8Array,
-      client: TransformServiceClient,
-      transformations: Transform[],
-    ) {
-      const transform = client.transform(
-        {
-          image: {
-            blob: {
-              data: imageData,
-            },
-          },
-          transformations: transformations,
-        },
-        { abort: abortController.signal },
-      );
-
-      const results: TransformResult[] = [];
-
-      try {
-        for await (const { transformed, elapsed } of transform.responses) {
-          if (transformed.oneofKind === "image") {
-            const data = transformed.image.blob?.data;
-            if (data) {
-              results.push({ result: data, elapsed: elapsed });
-            }
-          } else if (transformed.oneofKind === "characters") {
-            results.push({
-              result: transformed.characters,
-              elapsed: elapsed,
-            });
-          }
-        }
-      } catch (error) {
-        let errorMessage;
-        if (isRpcError(error)) {
-          errorMessage = error.message || error.code;
-        } else {
-          errorMessage = "Unknown error";
-        }
-        results.push({ result: errorMessage, elapsed: null });
-      }
-
-      setTransformResults(results);
-    }
-
     if (imageData && transformClient) {
-      transform(imageData, transformClient, transformations);
+      transform(
+        imageData,
+        transformClient,
+        transformations,
+        abortController,
+      ).then(setTransformResults);
     }
 
     return () => {
@@ -485,30 +445,14 @@ function EditTransformationDialog({
 
     setTransformResult(null);
 
-    const transform = transformClient.transform({
-      image: {
-        blob: {
-          data: previousResult.result,
-        },
-      },
-      transformations: [transformation],
-    });
+    const result = await transform(
+      previousResult.result,
+      transformClient,
+      [transformation],
+      new AbortController(),
+    );
 
-    for await (const { transformed, elapsed } of transform.responses) {
-      if (transformed.oneofKind === "image") {
-        const data = transformed.image.blob?.data;
-        if (data) {
-          const result: TransformResult = { result: data, elapsed: elapsed };
-          setTransformResult(result);
-        }
-      } else if (transformed.oneofKind === "characters") {
-        const result: TransformResult = {
-          result: transformed.characters,
-          elapsed: elapsed,
-        };
-        setTransformResult(result);
-      }
-    }
+    setTransformResult(result[0]);
   };
 
   return (
