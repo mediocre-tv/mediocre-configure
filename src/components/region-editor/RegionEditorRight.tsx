@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import styles from "./RegionEditor.module.css";
 import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, Fragment, useEffect, useRef, useState } from "react";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
 import { useGrpcClient } from "../grpc/GrpcContext.ts";
@@ -23,7 +23,6 @@ import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { Dimensions } from "../shapes/Dimensions.ts";
-import { isRpcError } from "../grpc/GrpcHealth.ts";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
 import { transform, TransformResult } from "./Transform.ts";
 
@@ -143,11 +142,6 @@ function EditableTransformationResult({
   );
 }
 
-interface TransformResult {
-  result: Uint8Array | string | null;
-  elapsed: number | null;
-}
-
 interface RegionTransformationsHeaderNameProps {
   name: string;
   setName: (name: string) => void;
@@ -244,87 +238,40 @@ function RegionTransformationsBody({
   };
 
   return (
-    <Stack direction={"row"} spacing={2} justifyContent={"space-between"}>
-      <EditableTransformationResult
-        transformation={transformations[0]}
-        setTransformation={(transformation) =>
-          setTransformation(transformation, 0)
-        }
-        result={results[0] ?? null}
-        previousResult={{ result: imageData, elapsed: 0 }}
-      />
-      <Stack
-        direction={"row"}
-        spacing={2}
-        overflow="auto"
-        alignItems={"center"}
-      >
-        <AddTransformationButton
-          addTransformation={(transformation) =>
-            addTransformation(transformation, 0)
-          }
-          previousResult={results[0] ?? null}
-        />
-        {transformations
-          .slice(1, transformations.length - 1)
-          .map((transformation, index) => {
-            const actualIndex = index + 1; // we skipped the first transformation
-            return (
-              <RegionIntermediateTransformations
-                key={actualIndex}
-                result={results[actualIndex] ?? null}
-                previousResult={results[index] ?? null}
-                transformation={transformation}
-                setTransformation={(transformation) =>
-                  setTransformation(transformation, actualIndex)
-                }
+    <Stack
+      direction={"row"}
+      spacing={2}
+      justifyContent={"space-between"}
+      alignItems={"center"}
+      overflow="auto"
+    >
+      {transformations.map((transformation, index) => {
+        const result = results[index];
+        const previousResult =
+          index == 0 ? { result: imageData, elapsed: 0 } : results[index - 1];
+
+        return (
+          <Fragment key={index}>
+            <EditableTransformationResult
+              transformation={transformation}
+              result={result}
+              previousResult={previousResult}
+              setTransformation={(transformation) =>
+                setTransformation(transformation, index)
+              }
+            />
+            {index < transformations.length - 1 && (
+              <AddTransformationButton
                 addTransformation={(transformation) =>
-                  addTransformation(transformation, actualIndex)
+                  addTransformation(transformation, index)
                 }
+                previousResult={result}
               />
-            );
-          })}
-      </Stack>
-      <EditableTransformationResult
-        transformation={transformations[transformations.length - 1]}
-        setTransformation={(transformation) =>
-          setTransformation(transformation, transformations.length - 1)
-        }
-        result={results[transformations.length - 1] ?? null}
-        previousResult={results[transformations.length - 2] ?? null}
-      />
+            )}
+          </Fragment>
+        );
+      })}
     </Stack>
-  );
-}
-
-interface RegionIntermediateTransformationsProps {
-  result: TransformResult | null;
-  previousResult: TransformResult | null;
-  transformation: Transform;
-  setTransformation: (transformation: Transform) => void;
-  addTransformation: (transformation: Transform) => void;
-}
-
-function RegionIntermediateTransformations({
-  result,
-  previousResult,
-  transformation,
-  setTransformation,
-  addTransformation,
-}: RegionIntermediateTransformationsProps) {
-  return (
-    <>
-      <EditableTransformationResult
-        transformation={transformation}
-        result={result}
-        previousResult={previousResult}
-        setTransformation={setTransformation}
-      />
-      <AddTransformationButton
-        addTransformation={addTransformation}
-        previousResult={result}
-      />
-    </>
   );
 }
 
