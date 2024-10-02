@@ -125,39 +125,35 @@ function RegionTransformationsHeaderName({
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(name);
 
-  const nameAndButton = (
+  if (isRenaming) {
+    return (
+      <form
+        onSubmit={() => {
+          setIsRenaming(false);
+          setName(newName);
+        }}
+      >
+        <Stack direction={"row"}>
+          <TextField
+            value={newName}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+              setNewName(event.target.value);
+            }}
+            autoFocus={true}
+          />
+          <Button type="submit">Save</Button>
+        </Stack>
+      </form>
+    );
+  }
+
+  return (
     <Stack direction={"row"} alignItems={"center"} gap={1}>
-      {name}
+      <Typography variant="body1">{name}</Typography>
       <IconButton onClick={() => setIsRenaming(true)}>
         <EditIcon />
       </IconButton>
     </Stack>
-  );
-
-  const renameForm = (
-    <form
-      onSubmit={() => {
-        setIsRenaming(false);
-        setName(newName);
-      }}
-    >
-      <Stack direction={"row"}>
-        <TextField
-          value={newName}
-          onChange={(event: ChangeEvent<HTMLInputElement>) => {
-            setNewName(event.target.value);
-          }}
-          autoFocus={true}
-        />
-        <Button type="submit">Save</Button>
-      </Stack>
-    </form>
-  );
-
-  return (
-    <Typography variant="body1" gutterBottom>
-      {isRenaming ? renameForm : nameAndButton}
-    </Typography>
   );
 }
 
