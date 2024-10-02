@@ -2,7 +2,7 @@ import { Rectangle, Rectangles } from "../shapes/Rectangle.tsx";
 import { Stack } from "@mui/material";
 import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
 import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
-import { crop } from "./Transform.ts";
+import { crop, tesseract } from "./Transform.ts";
 
 interface RegionEditorLeftProps {
   image: string;
@@ -37,11 +37,14 @@ function getRegionRectangle(region: Region): Rectangle | null {
   }
 
   const transformation = transformations[0]?.transformation;
-  if (transformation.oneofKind !== "crop") {
+  if (
+    transformation.oneofKind !== "imageToImage" ||
+    transformation.imageToImage.transformation.oneofKind !== "crop"
+  ) {
     return null;
   }
 
-  const crop = transformation.crop;
+  const crop = transformation.imageToImage.transformation.crop;
   if (crop.params.oneofKind !== "fixed") {
     return null;
   }
@@ -89,7 +92,7 @@ function setRegionRectangles(
       return Region.create({
         id: id,
         name: `Region ${regions.length + 1}`,
-        transformations: [crop(rectangle)],
+        transformations: [crop(rectangle), tesseract()],
       });
     });
   setRegions([...updatedRegions, ...newRegions]);
