@@ -2,8 +2,8 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { transform, TransformResult } from "../region-editor/Transform.ts";
-import { TransformServiceClient } from "../../../../mediocre-service/@buf/typescript/mediocre/image/transform/v1beta/transform_pb.client";
-import { Transform } from "../../../../mediocre-service/@buf/typescript/mediocre/image/transform/v1beta/transform_pb";
+import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
+import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
 
 export interface GrpcContextProps {
   domain: string;

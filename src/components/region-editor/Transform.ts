@@ -1,7 +1,7 @@
-import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb";
+import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
 import { Rectangle } from "../shapes/Rectangle";
 import { isRpcError } from "../grpc/GrpcHealth.ts";
-import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/image/transform/v1beta/transform_pb.client";
+import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
 
 export function crop(rectangle: Rectangle): Transform {
   return {
@@ -68,14 +68,18 @@ export async function transform(
 
   try {
     for await (const { transformed, elapsed } of transform.responses) {
-      if (transformed.oneofKind === "image") {
-        const data = transformed.image.blob?.data;
+      if (!transformed) {
+        results.push({ result: "No transformed value set", elapsed: null });
+        return results;
+      }
+      if (transformed.value.oneofKind === "image") {
+        const data = transformed.value.image.blob?.data;
         if (data) {
           results.push({ result: data, elapsed: elapsed });
         }
-      } else if (transformed.oneofKind === "characters") {
+      } else if (transformed.value.oneofKind === "characters") {
         results.push({
-          result: transformed.characters,
+          result: transformed.value.characters,
           elapsed: elapsed,
         });
       }
