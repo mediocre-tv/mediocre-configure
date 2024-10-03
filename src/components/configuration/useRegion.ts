@@ -16,23 +16,14 @@ export function useRegion(id: string | undefined) {
   }
 
   const { regions, setRegions, zone, stage, configuration } = regionsContext;
-  const region = regions.find((region) => region.id === id);
-  if (!region) {
+  const index = regions.findIndex((region) => region.id === id);
+  if (!index) {
     return null;
   }
 
-  function setRegion(regionToSet: Region) {
-    const index = regions.findIndex((region) => region.id === id);
-    if (index !== -1) {
-      setRegions(regions.splice(index, 1, regionToSet));
-    } else {
-      setRegions([...regions, regionToSet]);
-    }
-  }
-
   return {
-    region,
-    setRegion,
+    region: regions[index],
+    setRegion: (region: Region) => setRegions(regions.splice(index, 1, region)),
     zone,
     stage,
     configuration,

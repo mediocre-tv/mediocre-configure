@@ -10,23 +10,15 @@ export function useRegionTest(id: string | undefined) {
   }
 
   const { regionTests, setRegionTests } = regionTestsContext;
-  const regionTest = regionTests.find((regionTest) => regionTest.id === id);
-  if (!regionTest) {
+  const index = regionTests.findIndex((regionTest) => regionTest.id === id);
+  if (index !== -1) {
     return null;
   }
 
-  function setRegionTest(regionTestToSet: ExpectedRegion) {
-    const index = regionTests.findIndex((regionTest) => regionTest.id === id);
-    if (index !== -1) {
-      setRegionTests(regionTests.splice(index, 1, regionTestToSet));
-    } else {
-      setRegionTests([...regionTests, regionTestToSet]);
-    }
-  }
-
   return {
-    regionTest,
-    setRegionTest,
+    regionTest: regionTests[index],
+    setRegionTest: (regionTest: ExpectedRegion) =>
+      setRegionTests(regionTests.splice(index, 1, regionTest)),
     ...regionContext,
   };
 }

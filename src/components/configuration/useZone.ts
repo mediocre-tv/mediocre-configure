@@ -12,23 +12,14 @@ export function useZone(id: string | undefined) {
   }
 
   const { zones, setZones, stage, configuration } = zonesContext;
-  const zone = zones.find((zone) => zone.id === id);
-  if (!zone) {
+  const index = zones.findIndex((zone) => zone.id === id);
+  if (index !== -1) {
     return null;
   }
 
-  function setZone(zoneToSet: Zone) {
-    const index = zones.findIndex((zone) => zone.id === id);
-    if (index !== -1) {
-      setZones(zones.splice(index, 1, zoneToSet));
-    } else {
-      setZones([...zones, zoneToSet]);
-    }
-  }
-
   return {
-    zone,
-    setZone,
+    zone: zones[index],
+    setZone: (zone: Zone) => setZones(zones.splice(index, 1, zone)),
     stage,
     configuration,
   };

@@ -10,23 +10,15 @@ export function useZoneTest(id: string | undefined) {
   }
 
   const { zoneTests, setZoneTests } = zoneTestsContext;
-  const zoneTest = zoneTests.find((zoneTest) => zoneTest.id === id);
-  if (!zoneTest) {
+  const index = zoneTests.findIndex((zoneTest) => zoneTest.id === id);
+  if (index !== -1) {
     return null;
   }
 
-  function setZoneTest(zoneTestToSet: ExpectedZone) {
-    const index = zoneTests.findIndex((zoneTest) => zoneTest.id === id);
-    if (index !== -1) {
-      setZoneTests(zoneTests.splice(index, 1, zoneTestToSet));
-    } else {
-      setZoneTests([...zoneTests, zoneTestToSet]);
-    }
-  }
-
   return {
-    zoneTest,
-    setZoneTest,
+    zoneTest: zoneTests[index],
+    setZoneTest: (zoneTest: ExpectedZone) =>
+      setZoneTests(zoneTests.splice(index, 1, zoneTest)),
     ...zoneContext,
   };
 }

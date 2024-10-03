@@ -9,10 +9,8 @@ export function useConfigurationTest() {
     return null;
   }
 
-  const { test, setTest } = testContext;
   return {
-    test,
-    setTest,
+    ...testContext,
     ...configurationContext,
   };
 }

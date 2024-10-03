@@ -10,23 +10,15 @@ export function useStageTest(id: string | undefined) {
   }
 
   const { stageTests, setStageTests } = stageTestsContext;
-  const stageTest = stageTests.find((stageTest) => stageTest.id === id);
-  if (!stageTest) {
+  const index = stageTests.findIndex((stageTest) => stageTest.id === id);
+  if (index !== -1) {
     return null;
   }
 
-  function setStageTest(stageTestToSet: ExpectedStage) {
-    const index = stageTests.findIndex((stageTest) => stageTest.id === id);
-    if (index !== -1) {
-      setStageTests(stageTests.splice(index, 1, stageTestToSet));
-    } else {
-      setStageTests([...stageTests, stageTestToSet]);
-    }
-  }
-
   return {
-    stageTest,
-    setStageTest,
+    stageTest: stageTests[index],
+    setStageTest: (stageTest: ExpectedStage) =>
+      setStageTests(stageTests.splice(index, 1, stageTest)),
     ...stageContext,
   };
 }

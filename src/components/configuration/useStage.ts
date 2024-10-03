@@ -8,23 +8,14 @@ export function useStage(id: string | undefined) {
   }
 
   const { stages, setStages, configuration } = stagesContext;
-  const stage = stages.find((stage) => stage.id === id);
-  if (!stage) {
+  const index = stages.findIndex((stage) => stage.id === id);
+  if (index !== -1) {
     return null;
   }
 
-  function setStage(stageToSet: Stage) {
-    const index = stages.findIndex((stage) => stage.id === id);
-    if (index !== -1) {
-      setStages(stages.splice(index, 1, stageToSet));
-    } else {
-      setStages([...stages, stageToSet]);
-    }
-  }
-
   return {
-    stage,
-    setStage,
+    stage: stages[index],
+    setStage: (stage: Stage) => setStages(stages.splice(index, 1, stage)),
     configuration,
   };
 }
