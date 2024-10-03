@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
-import { transform, TransformResult } from "../region-editor/Transform.ts";
+import { transform, TransformResult } from "../transform/Transform.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
 

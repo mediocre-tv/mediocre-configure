@@ -13,7 +13,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import styles from "./RegionEditor.module.css";
+import styles from "./RegionsEditor.module.css";
 import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
 import { ChangeEvent, Fragment, useEffect, useRef, useState } from "react";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
@@ -24,7 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { Dimensions } from "../shapes/Dimensions.ts";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
-import { TransformResult, transformSingle } from "./Transform.ts";
+import { TransformResult, transformSingle } from "../transform/Transform.ts";
 
 interface TransformationResultProps {
   label: string;
@@ -406,7 +406,7 @@ interface RegionEditorRightParams {
   setRegions: (regions: Region[]) => void;
 }
 
-export function RegionEditorRight({
+export function RegionsEditorRight({
   image,
   regions,
   setRegions,
