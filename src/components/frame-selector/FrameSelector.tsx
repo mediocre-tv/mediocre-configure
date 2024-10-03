@@ -1,4 +1,4 @@
-import { DragEvent, Ref, useCallback, useRef, useState } from "react";
+import { DragEvent, Ref, useCallback, useState } from "react";
 import { Frame } from "./useVideoFrame.ts";
 import { Alert, Box, Button, Stack, Typography } from "@mui/material";
 import {
@@ -8,13 +8,23 @@ import {
 import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
 
 export function FrameSelector() {
-  const frameAwareVideoPlayerRef = useRef<FrameAwareVideoPlayerRef>(null);
+  const [videoPlayer, setVideoPlayer] =
+    useState<FrameAwareVideoPlayerRef | null>(null);
   const [frames, setFrames] = useState<Frame[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const onVideoPlayerRefChange = useCallback(
+    (ref: FrameAwareVideoPlayerRef) => {
+      if (ref && !videoPlayer) {
+        setVideoPlayer(ref);
+      }
+    },
+    [videoPlayer],
+  );
+
   const getFrame = () => {
-    if (frameAwareVideoPlayerRef.current) {
-      const frameOrError = frameAwareVideoPlayerRef.current.getFrame();
+    if (videoPlayer) {
+      const frameOrError = videoPlayer.getFrame();
       if ("error" in frameOrError) {
         setError(frameOrError.error);
       } else {
@@ -27,9 +37,9 @@ export function FrameSelector() {
   };
 
   const seekToFrame = (time: number) => {
-    if (frameAwareVideoPlayerRef.current) {
+    if (videoPlayer) {
       setError(null);
-      frameAwareVideoPlayerRef.current.seekToFrame(time);
+      videoPlayer.seekToFrame(time);
     } else {
       setError("Video player is not available.");
     }
@@ -40,10 +50,10 @@ export function FrameSelector() {
       leftChild={
         <Stack spacing={2}>
           <DragDropVideoPlayer
-            frameAwareVideoPlayerRef={frameAwareVideoPlayerRef}
+            frameAwareVideoPlayerRef={onVideoPlayerRefChange}
           />
           {error && <Alert severity={"error"}>{error}</Alert>}
-          <Button onClick={getFrame}>Grab Frame</Button>
+          {videoPlayer && <Button onClick={getFrame}>Grab Frame</Button>}
         </Stack>
       }
       rightChild={
