@@ -1,8 +1,8 @@
 import snapshotImage from "../../assets/snapshot-2.png";
+import { useZones } from "../configuration/useZone.ts";
 import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
 import { ZonesEditorLeft } from "./ZonesEditorLeft.tsx";
 import { Stack, Typography } from "@mui/material";
-import { useZones } from "../configuration/ConfigurationContext.ts";
 
 export interface ZonesEditorProps {
   stageId: string;

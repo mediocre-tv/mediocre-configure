@@ -1,7 +1,7 @@
 import { ZonesEditor } from "../zones-editor/ZonesEditor.tsx";
 import { useEffect } from "react";
 import { v4 as uuid } from "uuid";
-import { useStages } from "../configuration/ConfigurationContext.ts";
+import { useStages } from "../configuration/useStage.ts";
 
 export function StagesEditor() {
   const stagesContext = useStages();

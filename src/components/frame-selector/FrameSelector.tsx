@@ -1,13 +1,17 @@
-import { DragEvent, Ref, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { Frame } from "./useVideoFrame.ts";
-import { Alert, Box, Button, Stack, Typography } from "@mui/material";
+import { Alert, Button, Stack, Typography } from "@mui/material";
 import {
   FrameAwareVideoPlayer,
   FrameAwareVideoPlayerRef,
 } from "./FrameAwareVideoPlayer.tsx";
 import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
 
-export function FrameSelector() {
+export interface FrameSelectorProps {
+  videoUrl: string;
+}
+
+export function FrameSelector({ videoUrl }: FrameSelectorProps) {
   const [videoPlayer, setVideoPlayer] =
     useState<FrameAwareVideoPlayerRef | null>(null);
   const [frames, setFrames] = useState<Frame[]>([]);
@@ -49,8 +53,9 @@ export function FrameSelector() {
     <LongOrSideBySideLayout
       leftChild={
         <Stack spacing={2}>
-          <DragDropVideoPlayer
-            frameAwareVideoPlayerRef={onVideoPlayerRefChange}
+          <FrameAwareVideoPlayer
+            ref={onVideoPlayerRefChange}
+            videoUrl={videoUrl}
           />
           {error && <Alert severity={"error"}>{error}</Alert>}
           {videoPlayer && <Button onClick={getFrame}>Grab Frame</Button>}
@@ -72,64 +77,5 @@ export function FrameSelector() {
         </Stack>
       }
     />
-  );
-}
-
-interface DragDropVideoPlayerProps {
-  frameAwareVideoPlayerRef: Ref<FrameAwareVideoPlayerRef>;
-}
-
-function DragDropVideoPlayer({
-  frameAwareVideoPlayerRef,
-}: DragDropVideoPlayerProps) {
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [dragging, setDragging] = useState(false);
-
-  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragging(false);
-
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("video/")) {
-      const url = URL.createObjectURL(file);
-      setVideoUrl(url);
-    }
-  }, []);
-
-  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setDragging(false);
-  };
-
-  const colour = dragging ? "primary.main" : "primary.light";
-
-  return (
-    <Box
-      borderRadius={2}
-      display={"flex"}
-      justifyContent={"center"}
-      alignItems={"center"}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      style={{ aspectRatio: "16/9" }}
-      sx={{
-        border: videoUrl ? "none" : "dashed",
-        borderColor: colour,
-      }}
-    >
-      {videoUrl ? (
-        <FrameAwareVideoPlayer
-          ref={frameAwareVideoPlayerRef}
-          videoUrl={videoUrl}
-        />
-      ) : (
-        <Typography color={colour}>Drag and drop a video file</Typography>
-      )}
-    </Box>
   );
 }

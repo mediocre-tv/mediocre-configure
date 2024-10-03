@@ -9,6 +9,7 @@ import { Configuration } from "@buf/broomy_mediocre.community_timostamm-protobuf
 import { v4 as uuid } from "uuid";
 import { StagesEditor } from "../stages-editor/StagesEditor.tsx";
 import { ConfigurationProvider } from "../configuration/ConfigurationProvider.tsx";
+import { TestProviderWithDialog } from "../test-context/TestProviderWithDialog.tsx";
 
 function getDefaultConfiguration(): Configuration {
   return {
@@ -27,7 +28,14 @@ function App() {
   return (
     <AppProviders>
       <GrpcProviderWithDialog>
-        <RegionEditor />
+        <ConfigurationProvider
+          configuration={configuration}
+          setConfiguration={setConfiguration}
+        >
+          <TestProviderWithDialog configuration={configuration}>
+            <StagesEditor />
+          </TestProviderWithDialog>
+        </ConfigurationProvider>
       </GrpcProviderWithDialog>
     </AppProviders>
   );
