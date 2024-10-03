@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import styles from "./RegionsEditor.module.css";
 import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
-import { ChangeEvent, Fragment, useEffect, useRef, useState } from "react";
+import { ChangeEvent, Fragment, useRef, useState } from "react";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
 import { useGrpcClient, useTransformClient } from "../grpc/GrpcContext.ts";
@@ -25,6 +25,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import { Dimensions } from "../shapes/Dimensions.ts";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
 import { TransformResult, transformSingle } from "../transform/Transform.ts";
+import { useImageData } from "../image/useImageData.ts";
 
 interface TransformationResultProps {
   label: string;
@@ -411,14 +412,7 @@ export function RegionsEditorRight({
   regions,
   setRegions,
 }: RegionEditorRightParams) {
-  const [imageData, setImageData] = useState<Uint8Array | null>(null);
-  useEffect(() => {
-    fetch(image)
-      .then((res) => res.arrayBuffer())
-      .then((buffer) => new Uint8Array(buffer))
-      .then(setImageData);
-  }, [image]);
-
+  const imageData = useImageData(image);
   const theme = useTheme();
   const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
 
