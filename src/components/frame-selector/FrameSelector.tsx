@@ -5,6 +5,7 @@ import {
   FrameAwareVideoPlayer,
   FrameAwareVideoPlayerRef,
 } from "./FrameAwareVideoPlayer.tsx";
+import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
 
 export function FrameSelector() {
   const frameAwareVideoPlayerRef = useRef<FrameAwareVideoPlayerRef>(null);
@@ -35,26 +36,32 @@ export function FrameSelector() {
   };
 
   return (
-    <Stack spacing={2} padding={2}>
-      <DragDropVideoPlayer
-        frameAwareVideoPlayerRef={frameAwareVideoPlayerRef}
-      />
-      {error && <Alert severity={"error"}>{error}</Alert>}
-      <Button onClick={getFrame}>Grab Frame</Button>
-      <Stack direction={"row"} sx={{ flexWrap: "wrap" }}>
-        {frames.map((frame, index) => (
-          <Stack
-            key={index}
-            width={1 / 4}
-            padding={2}
-            onClick={() => seekToFrame(frame.time)}
-          >
-            <img src={frame.image} width={"100%"} />
-            <Typography>{frame.time}s</Typography>
-          </Stack>
-        ))}
-      </Stack>
-    </Stack>
+    <LongOrSideBySideLayout
+      leftChild={
+        <Stack spacing={2}>
+          <DragDropVideoPlayer
+            frameAwareVideoPlayerRef={frameAwareVideoPlayerRef}
+          />
+          {error && <Alert severity={"error"}>{error}</Alert>}
+          <Button onClick={getFrame}>Grab Frame</Button>
+        </Stack>
+      }
+      rightChild={
+        <Stack direction={"row"} sx={{ flexWrap: "wrap" }}>
+          {frames.map((frame, index) => (
+            <Stack
+              key={index}
+              width={1 / 4}
+              padding={2}
+              onClick={() => seekToFrame(frame.time)}
+            >
+              <img src={frame.image} width={"100%"} />
+              <Typography>{frame.time}s</Typography>
+            </Stack>
+          ))}
+        </Stack>
+      }
+    />
   );
 }
 
@@ -92,7 +99,6 @@ function DragDropVideoPlayer({
 
   return (
     <Box
-      padding={2}
       borderRadius={2}
       display={"flex"}
       justifyContent={"center"}
