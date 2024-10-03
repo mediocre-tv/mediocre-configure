@@ -2,34 +2,23 @@ import { Stage } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/medi
 import { useConfiguration } from "./useConfiguration";
 
 export function useStage(id: string | undefined) {
-  const stageContext = useConfiguration();
-  if (!stageContext || !id) {
+  const stagesContext = useStages();
+  if (!stagesContext) {
     return null;
   }
 
-  function findStage(id: string) {
-    return configuration.stages.find((s) => s.id === id);
-  }
-
-  const { configuration, setConfiguration } = stageContext;
-  const stage = findStage(id);
+  const { stages, setStages, configuration } = stagesContext;
+  const stage = stages.find((stage) => stage.id === id);
   if (!stage) {
     return null;
   }
 
-  function setStage(newStage: Stage) {
-    if (!findStage(newStage.id)) {
-      setConfiguration({
-        ...configuration,
-        stages: [...configuration.stages, newStage],
-      });
+  function setStage(stageToSet: Stage) {
+    const index = stages.findIndex((stage) => stage.id === id);
+    if (index !== -1) {
+      setStages(stages.splice(index, 1, stageToSet));
     } else {
-      setConfiguration({
-        ...configuration,
-        stages: configuration.stages.map((stage) =>
-          stage.id === id ? newStage : stage,
-        ),
-      });
+      setStages([...stages, stageToSet]);
     }
   }
 
@@ -47,7 +36,6 @@ export function useStages() {
   }
 
   const { configuration, setConfiguration } = configurationContext;
-
   return {
     stages: configuration.stages,
     setStages: (stages: Stage[]) =>
