@@ -17,5 +17,7 @@ export function StagesEditor() {
   }
 
   const { stages } = stagesContext;
+
+  // just assuming a single stage for now
   return <ZonesEditor stageId={stages[0].id} />;
 }
