@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { Test } from "../../../../mediocre-service/@buf/typescript/mediocre/test/v1beta/test_pb";
+import { Test } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/test/v1beta/test_pb";
 
 export interface TestContextProps {
   test: Test;
