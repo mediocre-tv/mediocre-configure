@@ -1,4 +1,7 @@
-import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
+import {
+  Transform,
+  TransformImageToImage,
+} from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
 import { Rectangle } from "../shapes/Rectangle";
 import { isRpcError } from "../grpc/GrpcHealth.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
@@ -106,4 +109,17 @@ export async function transformSingle(
   return (
     await transform(imageData, client, [transformations], abortController)
   )[0];
+}
+
+export interface ImageToImageTransform {
+  transformation: {
+    oneofKind: "imageToImage";
+    imageToImage: TransformImageToImage;
+  };
+}
+
+export function isImageToImageTransform(
+  transform: Transform,
+): transform is ImageToImageTransform {
+  return transform.transformation.oneofKind === "imageToImage";
 }
