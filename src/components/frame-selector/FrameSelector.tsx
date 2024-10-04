@@ -1,20 +1,29 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Frame } from "./useVideoFrame.ts";
-import { Alert, Button, Stack, Typography } from "@mui/material";
+import { Alert, Button, Stack } from "@mui/material";
 import {
   FrameAwareVideoPlayer,
   FrameAwareVideoPlayerRef,
 } from "./FrameAwareVideoPlayer.tsx";
-import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
 
 export interface FrameSelectorProps {
   videoUrl: string;
+  frames: Frame[];
+  setFrames: (frames: Frame[]) => void;
+  selectedFrame: number | null;
 }
 
-export function FrameSelector({ videoUrl }: FrameSelectorProps) {
+export function FrameSelector({
+  videoUrl,
+  frames,
+  setFrames,
+  selectedFrame,
+}: FrameSelectorProps) {
   const [videoPlayer, setVideoPlayer] =
     useState<FrameAwareVideoPlayerRef | null>(null);
-  const [frames, setFrames] = useState<Frame[]>([]);
+  const [previousSelectedFrame, setPreviousSelectedFrame] = useState<
+    number | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
 
   const onVideoPlayerRefChange = useCallback(
@@ -33,49 +42,37 @@ export function FrameSelector({ videoUrl }: FrameSelectorProps) {
         setError(frameOrError.error);
       } else {
         setError(null);
-        setFrames((frames) => [...frames, frameOrError]);
+        setFrames([...frames, frameOrError]);
       }
     } else {
       setError("Video player is not available.");
     }
   };
 
-  const seekToFrame = (time: number) => {
-    if (videoPlayer) {
-      setError(null);
-      videoPlayer.seekToFrame(time);
-    } else {
-      setError("Video player is not available.");
+  const seekToFrame = useCallback(
+    (time: number) => {
+      if (videoPlayer) {
+        setError(null);
+        videoPlayer.seekToFrame(time);
+      } else {
+        setError("Video player is not available.");
+      }
+    },
+    [videoPlayer],
+  );
+
+  useEffect(() => {
+    if (selectedFrame && selectedFrame !== previousSelectedFrame) {
+      seekToFrame(selectedFrame);
+      setPreviousSelectedFrame(selectedFrame);
     }
-  };
+  }, [previousSelectedFrame, seekToFrame, selectedFrame]);
 
   return (
-    <LongOrSideBySideLayout
-      leftChild={
-        <Stack spacing={2}>
-          <FrameAwareVideoPlayer
-            ref={onVideoPlayerRefChange}
-            videoUrl={videoUrl}
-          />
-          {error && <Alert severity={"error"}>{error}</Alert>}
-          {videoPlayer && <Button onClick={getFrame}>Grab Frame</Button>}
-        </Stack>
-      }
-      rightChild={
-        <Stack direction={"row"} sx={{ flexWrap: "wrap" }}>
-          {frames.map((frame, index) => (
-            <Stack
-              key={index}
-              width={1 / 4}
-              padding={2}
-              onClick={() => seekToFrame(frame.time)}
-            >
-              <img src={frame.image} width={"100%"} />
-              <Typography>{frame.time}s</Typography>
-            </Stack>
-          ))}
-        </Stack>
-      }
-    />
+    <Stack spacing={2}>
+      <FrameAwareVideoPlayer ref={onVideoPlayerRefChange} videoUrl={videoUrl} />
+      {error && <Alert severity={"error"}>{error}</Alert>}
+      {videoPlayer && <Button onClick={getFrame}>Grab Frame</Button>}
+    </Stack>
   );
 }
