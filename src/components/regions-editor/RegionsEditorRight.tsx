@@ -1,31 +1,27 @@
 import {
   Box,
-  Button,
   Dialog,
   DialogContent,
   DialogTitle,
-  Divider,
   IconButton,
   Skeleton,
   Stack,
-  TextField,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import styles from "./RegionsEditor.module.css";
 import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
-import { ChangeEvent, Fragment, useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
 import { useGrpcClient, useTransformClient } from "../grpc/GrpcContext.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 import { Dimensions } from "../shapes/Dimensions.ts";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
 import { TransformResult, transformSingle } from "../transform/Transform.ts";
 import { useImageData } from "../image/useImageData.ts";
+import { BoxWithHeaderActions } from "../layout/BoxWithHeaderLayout.tsx";
 
 interface TransformationResultProps {
   label: string;
@@ -143,77 +139,6 @@ function EditableTransformationResult({
   );
 }
 
-interface RegionTransformationsHeaderNameProps {
-  name: string;
-  setName: (name: string) => void;
-}
-
-function RegionTransformationsHeaderName({
-  name,
-  setName,
-}: RegionTransformationsHeaderNameProps) {
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [newName, setNewName] = useState(name);
-
-  if (isRenaming) {
-    return (
-      <form
-        onSubmit={() => {
-          setIsRenaming(false);
-          setName(newName);
-        }}
-      >
-        <Stack direction={"row"}>
-          <TextField
-            value={newName}
-            onChange={(event: ChangeEvent<HTMLInputElement>) => {
-              setNewName(event.target.value);
-            }}
-            autoFocus={true}
-          />
-          <Button type="submit">Save</Button>
-        </Stack>
-      </form>
-    );
-  }
-
-  return (
-    <Stack direction={"row"} alignItems={"center"} gap={1}>
-      <Typography variant="body1">{name}</Typography>
-      <IconButton onClick={() => setIsRenaming(true)}>
-        <EditIcon />
-      </IconButton>
-    </Stack>
-  );
-}
-
-interface RegionTransformationsHeaderProps {
-  name: string;
-  onRenameRegion: (name: string) => void;
-  onDeleteRegion: () => void;
-}
-
-function RegionTransformationsHeader({
-  name,
-  onRenameRegion,
-  onDeleteRegion,
-}: RegionTransformationsHeaderProps) {
-  return (
-    <Stack
-      direction={"row"}
-      alignItems="center"
-      justifyContent={"space-between"}
-    >
-      <RegionTransformationsHeaderName name={name} setName={onRenameRegion} />
-      <Stack direction={"row"}>
-        <IconButton onClick={onDeleteRegion}>
-          <DeleteIcon />
-        </IconButton>
-      </Stack>
-    </Stack>
-  );
-}
-
 interface RegionTransformationsBodyProps {
   imageData: Uint8Array | null;
   transformations: Transform[];
@@ -296,20 +221,19 @@ function RegionTransformations({
   const setName = (name: string) => onUpdateRegion({ ...region, name });
 
   return (
-    <Stack border={1} borderRadius={1} padding={2} spacing={1}>
-      <RegionTransformationsHeader
-        name={name}
-        onRenameRegion={setName}
-        onDeleteRegion={onDeleteRegion}
-      />
-      <Divider />
-      <RegionTransformationsBody
-        imageData={imageData}
-        transformations={transformations}
-        setTransformations={setTransformations}
-        results={transformResults}
-      />
-    </Stack>
+    <BoxWithHeaderActions
+      name={name}
+      setName={setName}
+      actions={[{ onDelete: onDeleteRegion }]}
+      body={
+        <RegionTransformationsBody
+          imageData={imageData}
+          transformations={transformations}
+          setTransformations={setTransformations}
+          results={transformResults}
+        />
+      }
+    />
   );
 }
 
