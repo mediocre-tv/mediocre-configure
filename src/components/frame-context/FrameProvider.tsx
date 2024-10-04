@@ -24,20 +24,37 @@ export function FrameProvider({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
     const newTimestamps = timestamps?.filter(
       (timestamp) => !frames.find((frame) => frame.time === timestamp),
     );
-    if (newTimestamps.length > 0 && videoUrl) {
-      getFramesFromVideo(videoUrl, newTimestamps).then((newFrames) =>
-        setFrames((frames) => {
-          const framesToAdd = newFrames.filter(
-            (newFrame) => !frames.find((frame) => frame.time === newFrame.time),
+
+    const getFrames = async () => {
+      if (videoUrl && newTimestamps.length > 0) {
+        try {
+          const newFrames = await getFramesFromVideo(
+            videoUrl,
+            newTimestamps,
+            signal,
           );
-          const combinedFrames = [...frames, ...framesToAdd];
-          return combinedFrames.sort((a, b) => (a.time < b.time ? -1 : 1));
-        }),
-      );
-    }
+          if (!signal.aborted) {
+            return setSortedFrames(newFrames);
+          }
+        } catch (error) {
+          if (!signal.aborted) {
+            throw error;
+          }
+        }
+      }
+    };
+
+    getFrames();
+
+    return () => {
+      abortController.abort();
+    };
   }, [frames, timestamps, videoUrl]);
 
   if (!configurationTestContext) {
@@ -47,4 +64,14 @@ export function FrameProvider({ children }: PropsWithChildren) {
   return (
     <FrameContext.Provider value={{ frames }}>{children}</FrameContext.Provider>
   );
+
+  function setSortedFrames(newFrames: Frame[]) {
+    return setFrames((frames) => {
+      const framesToAdd = newFrames.filter(
+        (newFrame) => !frames.find((frame) => frame.time === newFrame.time),
+      );
+      const combinedFrames = [...frames, ...framesToAdd];
+      return combinedFrames.sort((a, b) => (a.time < b.time ? -1 : 1));
+    });
+  }
 }
