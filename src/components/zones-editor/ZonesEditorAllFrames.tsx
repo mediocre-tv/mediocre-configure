@@ -1,22 +1,37 @@
 import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
-import { ZoneView } from "./ZonesEditor.tsx";
+import { ReactNode } from "react";
 
 export interface ZonesEditorAllFramesProps {
   stageId: string;
-  onChangeView: (view: ZoneView) => void;
+  changeViewToggles: ReactNode;
 }
 
-export function ZonesEditorAllFrames() {
+export function ZonesEditorAllFrames({
+  changeViewToggles,
+}: ZonesEditorAllFramesProps) {
   return (
     <LongOrSideBySideLayout
-      leftChild={<ZonesEditorAllFramesLeft />}
+      leftChild={
+        <ZonesEditorAllFramesLeft changeViewToggles={changeViewToggles} />
+      }
       rightChild={<ZonesEditorAllFramesRight />}
     />
   );
 }
 
-function ZonesEditorAllFramesLeft() {
-  return <div>ZonesEditorAllFramesLeft</div>;
+interface ZonesEditorAllFramesLeftProps {
+  changeViewToggles: ReactNode;
+}
+
+function ZonesEditorAllFramesLeft({
+  changeViewToggles,
+}: ZonesEditorAllFramesLeftProps) {
+  return (
+    <>
+      {changeViewToggles}
+      <div>ZonesEditorAllFramesLeft</div>
+    </>
+  );
 }
 
 function ZonesEditorAllFramesRight() {

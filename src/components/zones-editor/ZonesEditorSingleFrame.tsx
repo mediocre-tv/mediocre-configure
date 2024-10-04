@@ -1,6 +1,5 @@
 import { useZone, useZones } from "../configuration/useZone.ts";
 import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
-import { ZoneView } from "./ZonesEditor.tsx";
 import { Zone } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
 import {
   getRectangles,
@@ -13,7 +12,7 @@ import { Box, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
 import { useStageTest } from "../test-context/useStageTest.ts";
 import { useFrames } from "../frame-context/useFrames.ts";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Frame } from "../frame-context/FrameContext.ts";
 import { useImageData } from "../image/useImageData.ts";
 import styles from "../regions-editor/RegionsEditor.module.css";
@@ -22,37 +21,24 @@ import { BoxWithHeaderActions } from "../layout/BoxWithHeaderLayout.tsx";
 
 export interface ZonesEditorSingleFrameProps {
   stageId: string;
-  onChangeView: (view: ZoneView) => void;
+  changeViewToggles: ReactNode;
 }
 
 export function ZonesEditorSingleFrame({
   stageId,
+  changeViewToggles,
 }: ZonesEditorSingleFrameProps) {
-  const { stageTest } = useStageTest(stageId);
-  const { zones, setZones } = useZones(stageId);
-
-  const frames = useFrames(
-    stageTest.details.flatMap((details) => details.timestamps),
-  );
-  const [currentFrame, setCurrentFrame] = useState<Frame | null>(
-    frames[0] ?? null,
-  );
-
-  useEffect(() => {
-    if (!currentFrame && frames.length > 0) {
-      setCurrentFrame(frames[0]);
-    }
-  }, [currentFrame, frames]);
+  const { zones } = useZones(stageId);
+  const [currentFrame, setCurrentFrame] = useState<Frame | null>(null);
 
   return (
     <LongOrSideBySideLayout
       leftChild={
         <ZonesEditorSingleFrameLeft
-          zones={zones}
-          setZones={setZones}
-          frames={frames}
+          stageId={stageId}
           currentFrame={currentFrame}
           setCurrentFrame={setCurrentFrame}
+          changeViewToggles={changeViewToggles}
         />
       }
       rightChild={
@@ -96,26 +82,31 @@ function setZoneTransforms(
 }
 
 interface ZoneEditorLeftProps {
-  zones: Zone[];
-  setZones: (zones: Zone[]) => void;
-  frames: Frame[];
+  stageId: string;
   currentFrame: Frame | null;
   setCurrentFrame: (frame: Frame) => void;
+  changeViewToggles: ReactNode;
 }
 
 function ZonesEditorSingleFrameLeft({
-  zones,
-  setZones,
-  frames,
+  stageId,
   currentFrame,
   setCurrentFrame,
+  changeViewToggles,
 }: ZoneEditorLeftProps) {
   const theme = useTheme();
   const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
 
-  if (!currentFrame?.image) {
-    return <Typography>Loading image</Typography>;
-  }
+  const { stageTest } = useStageTest(stageId);
+  const { zones, setZones } = useZones(stageId);
+
+  const timestamps = stageTest.details.flatMap((details) => details.timestamps);
+  const frames = useFrames(timestamps);
+  useEffect(() => {
+    if (!currentFrame?.image && frames.length > 0 && frames[0].image) {
+      setCurrentFrame(frames[0]);
+    }
+  }, [currentFrame, frames, setCurrentFrame]);
 
   const transforms = zones.map(getZoneTransforms);
   const rectangles = getRectangles(transforms);
@@ -128,10 +119,11 @@ function ZonesEditorSingleFrameLeft({
   return (
     <Stack spacing={5}>
       <ImageLabeller
-        image={currentFrame.image}
+        image={currentFrame?.image ?? null}
         rectangles={rectangles}
         setRectangles={setRectangles}
       />
+      {changeViewToggles}
       <Stack
         direction={"row"}
         sx={{
@@ -145,7 +137,7 @@ function ZonesEditorSingleFrameLeft({
         }}
       >
         {frames
-          .filter((frame) => frame.time !== currentFrame.time)
+          .filter((frame) => frame.time !== currentFrame?.time && frame.image)
           .map((frame, index) => (
             <Stack
               key={index}

@@ -92,8 +92,34 @@ function ScaledImageLabellerWindowContainer({
   );
 }
 
-interface ImageLabellerProps {
+interface CanvasImageLabellerProps extends ImageLabellerProps {
   image: string;
+}
+
+function CanvasImageLabeller({
+  image,
+  rectangles,
+  setRectangles,
+  onSelectRectangle,
+}: CanvasImageLabellerProps) {
+  const [canvasImage, canvasImageStatus] = useImage(image);
+
+  return canvasImage ? (
+    <ScaledImageLabellerWindowContainer
+      image={canvasImage}
+      rectangles={rectangles}
+      setRectangles={setRectangles}
+      onSelectRectangle={onSelectRectangle ? onSelectRectangle : () => {}}
+    />
+  ) : canvasImageStatus ? (
+    <CircularProgress />
+  ) : (
+    <Alert severity="error">Failed to load image</Alert>
+  );
+}
+
+interface ImageLabellerProps {
+  image: string | null;
   rectangles: Rectangles;
   setRectangles: (rectangles: Rectangles) => void;
   onSelectRectangle?: (id: string | null) => void;
@@ -105,8 +131,6 @@ export default function ImageLabeller({
   setRectangles,
   onSelectRectangle,
 }: ImageLabellerProps) {
-  const [canvasImage, canvasImageStatus] = useImage(image);
-
   return (
     <Box
       display="flex"
@@ -114,18 +138,18 @@ export default function ImageLabeller({
       alignItems="center"
       border="solid"
       borderRadius={1}
+      width={1}
+      sx={{ aspectRatio: "16/9" }}
     >
-      {canvasImage ? (
-        <ScaledImageLabellerWindowContainer
-          image={canvasImage}
+      {image ? (
+        <CanvasImageLabeller
+          image={image}
           rectangles={rectangles}
           setRectangles={setRectangles}
           onSelectRectangle={onSelectRectangle ? onSelectRectangle : () => {}}
         />
-      ) : canvasImageStatus ? (
-        <CircularProgress></CircularProgress>
       ) : (
-        <Alert severity="error">Failed to load image</Alert>
+        <CircularProgress />
       )}
     </Box>
   );
