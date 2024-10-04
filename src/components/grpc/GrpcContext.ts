@@ -4,6 +4,7 @@ import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { transform, TransformResult } from "../transform/Transform.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
+import { usePrevious } from "react-use";
 
 export interface GrpcContextProps {
   domain: string;
@@ -36,6 +37,7 @@ export function useTransformClient(
   transformations: Transform[],
 ) {
   const client = useGrpcClient(TransformServiceClient);
+  const previousImageData = usePrevious(imageData);
   const [transformResults, setTransformResults] = useState<TransformResult[]>(
     [],
   );
@@ -43,7 +45,7 @@ export function useTransformClient(
   useEffect(() => {
     const abortController = new AbortController();
 
-    if (imageData && client) {
+    if (imageData && client && previousImageData !== imageData) {
       transform(imageData, client, transformations, abortController).then(
         setTransformResults,
       );
@@ -52,7 +54,7 @@ export function useTransformClient(
     return () => {
       abortController.abort();
     };
-  }, [imageData, client, transformations]);
+  }, [imageData, client, transformations, previousImageData]);
 
   return transformResults;
 }
