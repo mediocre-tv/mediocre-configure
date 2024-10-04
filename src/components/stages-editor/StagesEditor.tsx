@@ -1,23 +1,33 @@
 import { ZonesEditor } from "../zones-editor/ZonesEditor.tsx";
 import { useEffect } from "react";
-import { v4 as uuid } from "uuid";
-import { useStages } from "../configuration/useStage.ts";
+import { getRandomTimestamps, getVideoDuration } from "../video/GrabFrames.ts";
+import { useStageTest, useStageTests } from "../test-context/useStageTest.ts";
+import { Typography } from "@mui/material";
+
+async function getDefaultStageDetails(url: string) {
+  const duration = await getVideoDuration(url);
+  const timestamps = getRandomTimestamps(0, duration, 10);
+  return { start: 0, end: duration, timestamps: timestamps };
+}
 
 export function StagesEditor() {
-  const stagesContext = useStages();
+  // just assuming a single stage for now
 
+  const { stageTests, stages, test } = useStageTests();
+  const { stageTest, setStageTest } = useStageTest(stageTests.at(0)?.id);
+
+  const url = test.video?.url;
   useEffect(() => {
-    if (!stagesContext?.stages) {
-      stagesContext?.setStages([{ id: uuid(), name: "Stage 1", zones: [] }]);
+    if (stageTest.details.length === 0 && url) {
+      getDefaultStageDetails(url).then((details) => {
+        setStageTest({ ...stageTest, details: [details] });
+      });
     }
-  }, [stagesContext]);
+  }, [setStageTest, stageTest, url]);
 
-  if (!stagesContext) {
-    return null;
+  if (stages.length === 0) {
+    return <Typography>Loading stages</Typography>;
   }
 
-  const { stages } = stagesContext;
-
-  // just assuming a single stage for now
   return <ZonesEditor stageId={stages[0].id} />;
 }
