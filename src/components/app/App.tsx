@@ -10,12 +10,19 @@ import { v4 as uuid } from "uuid";
 import { StagesEditor } from "../stages-editor/StagesEditor.tsx";
 import { ConfigurationProvider } from "../configuration/ConfigurationProvider.tsx";
 import { TestProviderWithDialog } from "../test-context/TestProviderWithDialog.tsx";
+import { FrameProvider } from "../frame-context/FrameProvider.tsx";
 
 function getDefaultConfiguration(): Configuration {
   return {
     id: uuid(),
     name: "New Configuration",
-    stages: [],
+    stages: [
+      {
+        id: uuid(),
+        name: "New Stage",
+        zones: [],
+      },
+    ],
   };
 }
 
@@ -33,7 +40,9 @@ function App() {
           setConfiguration={setConfiguration}
         >
           <TestProviderWithDialog configuration={configuration}>
-            <StagesEditor />
+            <FrameProvider>
+              <StagesEditor />
+            </FrameProvider>
           </TestProviderWithDialog>
         </ConfigurationProvider>
       </GrpcProviderWithDialog>
