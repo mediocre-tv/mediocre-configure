@@ -6,4 +6,7 @@ export interface TestContextProps {
   setTest: (test: Test) => void;
 }
 
-export const TestContext = createContext<TestContextProps | null>(null);
+export const TestContext = createContext<TestContextProps>({
+  test: Test.create(),
+  setTest: () => {},
+});

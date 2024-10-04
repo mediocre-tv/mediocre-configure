@@ -13,7 +13,7 @@ function getDefaultTest(configuration: Configuration, video: Video): Test {
   return {
     id: uuid(),
     name: `Test for ${configuration.name}`,
-    configuration: configuration,
+    configurationId: configuration.id,
     video: video,
     stages: configuration.stages.map((stage) => ({
       id: stage.id,

@@ -1,35 +1,51 @@
-import { useStage } from "../configuration/useStage.ts";
+import { useStage, useStages } from "../configuration/useStage.ts";
 import { useConfigurationTest } from "./useConfigurationTest.ts";
 import { ExpectedStage } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/test/v1beta/test_pb";
+import { useEffect, useMemo } from "react";
 
 export function useStageTest(id: string | undefined) {
   const stageContext = useStage(id);
-  const stageTestsContext = useStageTests();
-  if (!stageContext || !stageTestsContext) {
-    return null;
-  }
+  const { stageTests, setStageTests, test } = useStageTests();
 
-  const { stageTests, setStageTests } = stageTestsContext;
+  const defaultStageTestContext = useMemo(
+    () => ({
+      stageTest: ExpectedStage.create({ id: id }),
+      setStageTest: (stageTest: ExpectedStage) =>
+        setStageTests([...stageTests, stageTest]),
+      test: test,
+      ...stageContext,
+    }),
+    [id, setStageTests, stageContext, stageTests, test],
+  );
+
   const index = stageTests.findIndex((stageTest) => stageTest.id === id);
-  if (index !== -1) {
-    return null;
+
+  useEffect(() => {
+    if (index === -1) {
+      defaultStageTestContext.setStageTest(defaultStageTestContext.stageTest);
+    }
+  }, [defaultStageTestContext, index]);
+
+  if (index === -1) {
+    return defaultStageTestContext;
   }
 
   return {
     stageTest: stageTests[index],
-    setStageTest: (stageTest: ExpectedStage) =>
-      setStageTests(stageTests.splice(index, 1, stageTest)),
+    setStageTest: (stageTest: ExpectedStage) => {
+      const splicedStageTests = stageTests;
+      splicedStageTests.splice(index, 1, stageTest);
+      setStageTests(splicedStageTests);
+    },
+    test: test,
     ...stageContext,
   };
 }
 
 export function useStageTests() {
-  const configurationTestContext = useConfigurationTest();
-  if (!configurationTestContext) {
-    return null;
-  }
+  const { test, setTest } = useConfigurationTest();
+  const stagesContext = useStages();
 
-  const { test, setTest, configuration } = configurationTestContext;
   return {
     stageTests: test.stages,
     setStageTests: (stages: ExpectedStage[]) =>
@@ -37,6 +53,7 @@ export function useStageTests() {
         ...test,
         stages: stages,
       }),
-    configuration,
+    test: test,
+    ...stagesContext,
   };
 }

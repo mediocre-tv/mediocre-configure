@@ -6,5 +6,7 @@ export interface ConfigurationContextProps {
   setConfiguration: (configuration: Configuration) => void;
 }
 
-export const ConfigurationContext =
-  createContext<ConfigurationContextProps | null>(null);
+export const ConfigurationContext = createContext<ConfigurationContextProps>({
+  configuration: Configuration.create(),
+  setConfiguration: () => {},
+});

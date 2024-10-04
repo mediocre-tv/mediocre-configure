@@ -1,35 +1,54 @@
-import { useRegion } from "../configuration/useRegion.ts";
+import { useRegion, useRegions } from "../configuration/useRegion.ts";
 import { ExpectedRegion } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/test/v1beta/test_pb";
 import { useZoneTest } from "./useZoneTest.ts";
+import { useEffect, useMemo } from "react";
 
 export function useRegionTest(id: string | undefined) {
   const regionContext = useRegion(id);
-  const regionTestsContext = useRegionTests(regionContext?.zone.id);
-  if (!regionContext || !regionTestsContext) {
-    return null;
-  }
+  const { regionTests, setRegionTests, test } = useRegionTests(
+    regionContext.zone.id,
+  );
 
-  const { regionTests, setRegionTests } = regionTestsContext;
+  const defaultRegionTestContext = useMemo(
+    () => ({
+      regionTest: ExpectedRegion.create({ id: id }),
+      setRegionTest: (regionTest: ExpectedRegion) =>
+        setRegionTests([...regionTests, regionTest]),
+      test: test,
+      ...regionContext,
+    }),
+    [id, setRegionTests, regionContext, regionTests, test],
+  );
+
   const index = regionTests.findIndex((regionTest) => regionTest.id === id);
-  if (index !== -1) {
-    return null;
+
+  useEffect(() => {
+    if (index === -1) {
+      defaultRegionTestContext.setRegionTest(
+        defaultRegionTestContext.regionTest,
+      );
+    }
+  }, [defaultRegionTestContext, index]);
+
+  if (index === -1) {
+    return defaultRegionTestContext;
   }
 
   return {
     regionTest: regionTests[index],
-    setRegionTest: (regionTest: ExpectedRegion) =>
-      setRegionTests(regionTests.splice(index, 1, regionTest)),
+    setRegionTest: (regionTest: ExpectedRegion) => {
+      const splicedRegionTests = regionTests;
+      splicedRegionTests.splice(index, 1, regionTest);
+      setRegionTests(splicedRegionTests);
+    },
+    test: test,
     ...regionContext,
   };
 }
 
 export function useRegionTests(zoneId: string | undefined) {
-  const zoneTestContext = useZoneTest(zoneId);
-  if (!zoneTestContext) {
-    return null;
-  }
-
-  const { zoneTest, setZoneTest, configuration } = zoneTestContext;
+  const { zoneTest, setZoneTest, test } = useZoneTest(zoneId);
+  const regionsContext = useRegions(zoneId);
   return {
     regionTests: zoneTest.regions,
     setRegionTests: (regions: ExpectedRegion[]) =>
@@ -37,6 +56,7 @@ export function useRegionTests(zoneId: string | undefined) {
         ...zoneTest,
         regions: regions,
       }),
-    configuration,
+    test: test,
+    ...regionsContext,
   };
 }

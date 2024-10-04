@@ -5,9 +5,6 @@ import { useConfiguration } from "../configuration/useConfiguration.ts";
 export function useConfigurationTest() {
   const configurationContext = useConfiguration();
   const testContext = useContext(TestContext);
-  if (!configurationContext || !testContext) {
-    return null;
-  }
 
   return {
     ...testContext,

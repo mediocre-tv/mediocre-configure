@@ -2,36 +2,39 @@ import { Zone } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/medio
 import { useStage, useStages } from "./useStage";
 
 export function useZone(id: string | undefined) {
-  const stagesContext = useStages();
-  const foundStage = stagesContext?.stages.find((stage) =>
+  const { stages } = useStages();
+  const foundStage = stages.find((stage) =>
     stage.zones.some((zone) => zone.id === id),
   );
-  const zonesContext = useZones(foundStage?.id);
-  if (!zonesContext) {
-    return null;
+
+  if (!foundStage) {
+    throw new Error(`No stage found for zone id ${id}`);
   }
 
-  const { zones, setZones, stage, configuration } = zonesContext;
+  const { zones, setZones, stage, configuration } = useZones(foundStage.id);
+
   const index = zones.findIndex((zone) => zone.id === id);
-  if (index !== -1) {
-    return null;
+  if (index === -1) {
+    throw new Error(`No zone found for id ${id}`);
   }
 
   return {
     zone: zones[index],
-    setZone: (zone: Zone) => setZones(zones.splice(index, 1, zone)),
+    setZone: (zone: Zone) => {
+      const splicedZones = zones;
+      splicedZones.splice(index, 1, zone);
+      setZones(splicedZones);
+    },
+    deleteZone: () => {
+      setZones(zones.filter((zone) => zone.id !== id));
+    },
     stage,
     configuration,
   };
 }
 
 export function useZones(stageId: string | undefined) {
-  const stageContext = useStage(stageId);
-  if (!stageContext) {
-    return null;
-  }
-
-  const { stage, setStage, configuration } = stageContext;
+  const { stage, setStage, configuration } = useStage(stageId);
   return {
     zones: stage.zones,
     setZones: (zones: Zone[]) =>
