@@ -1,36 +1,19 @@
-import snapshotImage from "../../assets/snapshot-2.png";
-import { useZones } from "../configuration/useZone.ts";
-import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
-import { ZonesEditorLeft } from "./ZonesEditorLeft.tsx";
-import { Stack, Typography } from "@mui/material";
+import { useState } from "react";
+import { ZonesEditorSingleFrame } from "./ZonesEditorSingleFrame.tsx";
+import { ZonesEditorAllFrames } from "./ZonesEditorAllFrames.tsx";
+
+export type ZoneView = "Single Frame" | "All Frames";
 
 export interface ZonesEditorProps {
   stageId: string;
 }
 
 export function ZonesEditor({ stageId }: ZonesEditorProps) {
-  const zonesContext = useZones(stageId);
-  if (!zonesContext) {
-    return null;
-  }
+  const [zoneView, setZoneView] = useState<ZoneView>("Single Frame");
 
-  const { zones, setZones } = zonesContext;
-  const image = snapshotImage;
-  return (
-    <LongOrSideBySideLayout
-      leftChild={
-        <ZonesEditorLeft image={image} zones={zones} setZones={setZones} />
-      }
-      rightChild={
-        <Stack direction={"row"} sx={{ flexWrap: "wrap" }}>
-          {zones.map((zone, index) => (
-            <Stack key={index} width={1 / 4} padding={2}>
-              <Typography>{zone.name}</Typography>
-              <Typography>{zone.id}</Typography>
-            </Stack>
-          ))}
-        </Stack>
-      }
-    />
+  return zoneView === "Single Frame" ? (
+    <ZonesEditorSingleFrame stageId={stageId} onChangeView={setZoneView} />
+  ) : (
+    <ZonesEditorAllFrames />
   );
 }
