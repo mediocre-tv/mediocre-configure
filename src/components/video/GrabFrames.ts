@@ -23,14 +23,19 @@ async function setup(url: string, signal?: AbortSignal) {
   return { video, canvas, ctx };
 }
 
+function teardown(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
+  video.remove();
+  canvas.remove();
+}
+
 async function getFrames(
   times: number[],
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
+  addFrame: (frame: Frame) => void,
   signal: AbortSignal,
 ) {
-  const frames: Frame[] = [];
   for (const time of times) {
     await new Promise<void>((resolve, reject) => {
       video.currentTime = time;
@@ -43,27 +48,22 @@ async function getFrames(
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        frames.push({ time: time, image: canvas.toDataURL() });
+        addFrame({ time: time, image: canvas.toDataURL() });
         resolve();
       };
     });
   }
-  return frames;
 }
 
 export async function getFramesFromVideo(
   url: string,
   times: number[],
+  addFrame: (frame: Frame) => void,
   signal: AbortSignal,
 ) {
   const { video, canvas, ctx } = await setup(url, signal);
-
-  const frames = await getFrames(times, video, canvas, ctx, signal);
-
-  video.remove();
-  canvas.remove();
-
-  return frames;
+  await getFrames(times, video, canvas, ctx, addFrame, signal);
+  teardown(video, canvas);
 }
 
 export function getRandomTimestamps(start: number, end: number, count: number) {

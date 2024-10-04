@@ -24,24 +24,30 @@ export function FrameProvider({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
+    const newTimestamps = timestamps
+      ?.filter((timestamp) => !frames.find((frame) => frame.time === timestamp))
+      .sort();
+
+    if (newTimestamps.length > 0) {
+      setSortedFrames(newTimestamps.map((time) => ({ time })));
+    }
+  }, [frames, timestamps]);
+
+  useEffect(() => {
     const abortController = new AbortController();
     const signal = abortController.signal;
 
-    const newTimestamps = timestamps?.filter(
-      (timestamp) => !frames.find((frame) => frame.time === timestamp),
-    );
+    const framesWithoutImages = frames.filter((frame) => !frame.image);
 
     const getFrames = async () => {
-      if (videoUrl && newTimestamps.length > 0) {
+      if (videoUrl && framesWithoutImages.length > 0) {
         try {
-          const newFrames = await getFramesFromVideo(
+          await getFramesFromVideo(
             videoUrl,
-            newTimestamps,
+            framesWithoutImages.map((frame) => frame.time),
+            (frame: Frame) => setSortedFrames([frame]),
             signal,
           );
-          if (!signal.aborted) {
-            return setSortedFrames(newFrames);
-          }
         } catch (error) {
           if (!signal.aborted) {
             throw error;
@@ -55,7 +61,7 @@ export function FrameProvider({ children }: PropsWithChildren) {
     return () => {
       abortController.abort();
     };
-  }, [frames, timestamps, videoUrl]);
+  }, [frames, videoUrl]);
 
   if (!configurationTestContext) {
     return <Typography>Could not provide frames</Typography>;
@@ -66,12 +72,18 @@ export function FrameProvider({ children }: PropsWithChildren) {
   );
 
   function setSortedFrames(newFrames: Frame[]) {
-    return setFrames((frames) => {
-      const framesToAdd = newFrames.filter(
-        (newFrame) => !frames.find((frame) => frame.time === newFrame.time),
-      );
-      const combinedFrames = [...frames, ...framesToAdd];
-      return combinedFrames.sort((a, b) => (a.time < b.time ? -1 : 1));
-    });
+    return setFrames((frames) => [
+      ...newFrames.reduce((acc, newFrame) => {
+        const frameIndex = acc.findIndex(
+          (frame) => frame.time === newFrame.time,
+        );
+        if (frameIndex === -1) {
+          return [...acc, newFrame].sort((a, b) => a.time - b.time);
+        } else if (!acc[frameIndex].image) {
+          acc[frameIndex] = newFrame;
+        }
+        return acc;
+      }, frames),
+    ]);
   }
 }
