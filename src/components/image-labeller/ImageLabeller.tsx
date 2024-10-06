@@ -3,7 +3,8 @@ import useImage from "use-image";
 import useImageContainer from "./UseImageContainer.ts";
 import { Dimensions } from "../shapes/Dimensions.ts";
 import ImageLabellerWindow from "./ImageLabellerWindow.tsx";
-import { Alert, Box, CircularProgress } from "@mui/material";
+import { Alert, Box } from "@mui/material";
+import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
 
 function getScaledRectangle(rectangle: Rectangle, scale: number) {
   return {
@@ -77,7 +78,7 @@ function ScaledImageLabellerWindowContainer({
 
   return (
     // always render the stage container, otherwise we can't dynamically resize the image
-    <Box width={1} ref={ref}>
+    <Box width={1} height={1} ref={ref}>
       {dimensions && scale && (
         <ScaledImageLabellerWindow
           image={image}
@@ -104,17 +105,23 @@ function CanvasImageLabeller({
 }: CanvasImageLabellerProps) {
   const [canvasImage, canvasImageStatus] = useImage(image);
 
-  return canvasImage ? (
-    <ScaledImageLabellerWindowContainer
-      image={canvasImage}
-      rectangles={rectangles}
-      setRectangles={setRectangles}
-      onSelectRectangle={onSelectRectangle ? onSelectRectangle : () => {}}
-    />
-  ) : canvasImageStatus ? (
-    <CircularProgress />
-  ) : (
-    <Alert severity="error">Failed to load image</Alert>
+  return (
+    <SkeletonBox
+      showSkeleton={
+        canvasImage === undefined || canvasImageStatus === "loading"
+      }
+    >
+      {canvasImage ? (
+        <ScaledImageLabellerWindowContainer
+          image={canvasImage}
+          rectangles={rectangles}
+          setRectangles={setRectangles}
+          onSelectRectangle={onSelectRectangle ? onSelectRectangle : () => {}}
+        />
+      ) : (
+        <Alert severity="error">Failed to load image</Alert>
+      )}
+    </SkeletonBox>
   );
 }
 
@@ -132,25 +139,17 @@ export default function ImageLabeller({
   onSelectRectangle,
 }: ImageLabellerProps) {
   return (
-    <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      border="solid"
-      borderRadius={1}
-      width={1}
-      sx={{ aspectRatio: "16/9" }}
-    >
-      {image ? (
-        <CanvasImageLabeller
-          image={image}
-          rectangles={rectangles}
-          setRectangles={setRectangles}
-          onSelectRectangle={onSelectRectangle ? onSelectRectangle : () => {}}
-        />
-      ) : (
-        <CircularProgress />
-      )}
+    <Box width={1} sx={{ aspectRatio: "16/9" }}>
+      <SkeletonBox showSkeleton={!image}>
+        {image && (
+          <CanvasImageLabeller
+            image={image}
+            rectangles={rectangles}
+            setRectangles={setRectangles}
+            onSelectRectangle={onSelectRectangle ? onSelectRectangle : () => {}}
+          />
+        )}
+      </SkeletonBox>
     </Box>
   );
 }

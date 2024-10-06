@@ -18,6 +18,7 @@ import { useImageData } from "../image/useImageData.ts";
 import styles from "../regions-editor/RegionsEditor.module.css";
 import { useTransformClient } from "../grpc/GrpcContext.ts";
 import { BoxWithHeaderActions } from "../layout/BoxWithHeaderLayout.tsx";
+import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
 
 export interface ZonesEditorSingleFrameProps {
   stageId: string;
@@ -81,6 +82,69 @@ function setZoneTransforms(
   setZones(updatedZones);
 }
 
+interface ZoneFramesViewerProps {
+  stageId: string;
+  currentFrame: Frame | null;
+  setCurrentFrame: (frame: Frame) => void;
+}
+
+function ZoneFramesViewer({
+  stageId,
+  currentFrame,
+  setCurrentFrame,
+}: ZoneFramesViewerProps) {
+  const theme = useTheme();
+  const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
+
+  const { stageTest } = useStageTest(stageId);
+  const timestamps = stageTest.details.flatMap((details) => details.timestamps);
+
+  const frames = useFrames(timestamps);
+
+  useEffect(() => {
+    if (!currentFrame?.image && frames.length > 0 && frames[0].image) {
+      setCurrentFrame(frames[0]);
+    }
+  }, [currentFrame, frames, setCurrentFrame]);
+
+  return (
+    <Stack
+      direction={"row"}
+      sx={{
+        ...(hasLgBreakpoint
+          ? {
+              flexWrap: "wrap",
+            }
+          : {
+              overflow: "auto",
+            }),
+      }}
+    >
+      {frames
+        .filter((frame) => frame.time !== currentFrame?.time)
+        .map((frame, index) => (
+          <Stack key={index} spacing={1} padding={2}>
+            <SkeletonBox
+              showSkeleton={!frame.image}
+              width={200}
+              aspectRatio={"16/9"}
+            >
+              <img
+                src={frame.image}
+                width={"100%"}
+                onClick={() => setCurrentFrame(frame)}
+                style={{ cursor: "pointer" }}
+              />
+            </SkeletonBox>
+            <Typography textAlign={"center"}>
+              {frame.time.toFixed(3)}s
+            </Typography>
+          </Stack>
+        ))}
+    </Stack>
+  );
+}
+
 interface ZoneEditorLeftProps {
   stageId: string;
   currentFrame: Frame | null;
@@ -94,19 +158,7 @@ function ZonesEditorSingleFrameLeft({
   setCurrentFrame,
   changeViewToggles,
 }: ZoneEditorLeftProps) {
-  const theme = useTheme();
-  const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
-
-  const { stageTest } = useStageTest(stageId);
   const { zones, setZones } = useZones(stageId);
-
-  const timestamps = stageTest.details.flatMap((details) => details.timestamps);
-  const frames = useFrames(timestamps);
-  useEffect(() => {
-    if (!currentFrame?.image && frames.length > 0 && frames[0].image) {
-      setCurrentFrame(frames[0]);
-    }
-  }, [currentFrame, frames, setCurrentFrame]);
 
   const transforms = zones.map(getZoneTransforms);
   const rectangles = getRectangles(transforms);
@@ -124,32 +176,11 @@ function ZonesEditorSingleFrameLeft({
         setRectangles={setRectangles}
       />
       {changeViewToggles}
-      <Stack
-        direction={"row"}
-        sx={{
-          ...(hasLgBreakpoint
-            ? {
-                flexWrap: "wrap",
-              }
-            : {
-                overflow: "auto",
-              }),
-        }}
-      >
-        {frames
-          .filter((frame) => frame.time !== currentFrame?.time && frame.image)
-          .map((frame, index) => (
-            <Stack
-              key={index}
-              width={1 / 4}
-              padding={2}
-              onClick={() => setCurrentFrame(frame)}
-            >
-              <img src={frame.image} width={"100%"} />
-              <Typography>{frame.time}s</Typography>
-            </Stack>
-          ))}
-      </Stack>
+      <ZoneFramesViewer
+        stageId={stageId}
+        currentFrame={currentFrame}
+        setCurrentFrame={setCurrentFrame}
+      />
     </Stack>
   );
 }
