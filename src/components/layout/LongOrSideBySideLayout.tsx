@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import Grid2 from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import { ReactNode } from "react";
 
 export interface LongOrSideBySideLayoutProps {
@@ -13,14 +13,12 @@ export function LongOrSideBySideLayout({
 }: LongOrSideBySideLayoutProps) {
   return (
     <Box width={1} height={1} display="flex" justifyContent="center" p={10}>
-      <Grid2 container width={1} spacing={10}>
-        <Grid2 xs={12} lg={6}>
-          {leftChild}
-        </Grid2>
-        <Grid2 height={1} xs={12} lg={6}>
+      <Grid container width={1} spacing={10}>
+        <Grid size={{ xs: 12, lg: 6 }}>{leftChild}</Grid>
+        <Grid height={1} size={{ xs: 12, lg: 6 }}>
           {rightChild}
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   );
 }

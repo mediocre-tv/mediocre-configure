@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { GrpcContextProps } from "./GrpcContext.ts";
 import { checkHealth } from "./GrpcHealth.ts";
-import Grid2 from "@mui/material/Unstable_Grid2";
+import Grid from "@mui/material/Grid2";
 import LoadingButton from "@mui/lab/LoadingButton";
 
 interface GrpcConfigDialogProps {
@@ -60,15 +60,15 @@ export default function GrpcConfigDialog({
     >
       <DialogTitle>Connect to mediocre</DialogTitle>
       <DialogContent>
-        <Grid2 container spacing={1}>
-          <Grid2 xs={12}>
+        <Grid container spacing={1}>
+          <Grid size={{ xs: 12 }}>
             <DialogContentText>
               Could not connect to the default server, please enter the details
               of a valid server:
             </DialogContentText>
-          </Grid2>
-          <Grid2 container>
-            <Grid2 xs={8}>
+          </Grid>
+          <Grid container>
+            <Grid size={{ xs: 8 }}>
               <TextField
                 required
                 label="Domain"
@@ -81,8 +81,8 @@ export default function GrpcConfigDialog({
                 type="url"
                 fullWidth
               />
-            </Grid2>
-            <Grid2 xs={4}>
+            </Grid>
+            <Grid size={{ xs: 4 }}>
               <TextField
                 required
                 label="Port"
@@ -95,14 +95,14 @@ export default function GrpcConfigDialog({
                 type="number"
                 fullWidth
               />
-            </Grid2>
-          </Grid2>
+            </Grid>
+          </Grid>
           {errorMessage && (
-            <Grid2 xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Alert severity="error">{errorMessage}</Alert>
-            </Grid2>
+            </Grid>
           )}
-        </Grid2>
+        </Grid>
       </DialogContent>
       <DialogActions>
         <LoadingButton
