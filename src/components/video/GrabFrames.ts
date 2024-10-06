@@ -13,45 +13,55 @@ async function setup(url: string, signal?: AbortSignal) {
   video.muted = true;
 
   await new Promise<void>((resolve, reject) => {
-    video.onloadedmetadata = () => resolve();
+    video.onloadeddata = () => resolve();
     video.onerror = () => reject("Failed to load video");
     if (signal?.aborted) {
       reject("Aborted video load");
     }
   });
 
-  return { video, canvas, ctx };
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  return {
+    video,
+    canvas,
+    ctx,
+  };
 }
 
-function teardown(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
-  video.remove();
-  canvas.remove();
-}
-
-async function getFrames(
+async function captureFramesAtTimestamps(
   times: number[],
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,
-  ctx: CanvasRenderingContext2D,
+  context: CanvasRenderingContext2D,
   addFrame: (frame: Frame) => void,
   signal: AbortSignal,
 ) {
   for (const time of times) {
-    await new Promise<void>((resolve, reject) => {
-      video.currentTime = time;
-      video.onseeked = () => {
+    video.currentTime = time;
+
+    // We must wait for the video to seek to the correct time
+    const url = await new Promise<string>((resolve, reject) =>
+      video.requestVideoFrameCallback(() => {
         if (signal.aborted) {
           reject("Aborted frame capture");
-          return;
         }
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        addFrame({ time: time, image: canvas.toDataURL() });
-        resolve();
-      };
-    });
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            throw new Error("Failed to capture frame");
+          }
+
+          const url = URL.createObjectURL(blob);
+          resolve(url);
+        });
+      }),
+    );
+
+    addFrame({ time, image: url });
   }
 }
 
@@ -61,9 +71,21 @@ export async function getFramesFromVideo(
   addFrame: (frame: Frame) => void,
   signal: AbortSignal,
 ) {
-  const { video, canvas, ctx } = await setup(url, signal);
-  await getFrames(times, video, canvas, ctx, addFrame, signal);
-  teardown(video, canvas);
+  const { canvas, ctx, video } = await setup(url, signal);
+
+  try {
+    await captureFramesAtTimestamps(
+      times,
+      video,
+      canvas,
+      ctx,
+      addFrame,
+      signal,
+    );
+  } finally {
+    video.remove();
+    canvas.remove();
+  }
 }
 
 export function getRandomTimestamps(start: number, end: number, count: number) {
