@@ -43,16 +43,15 @@ export function useTransformClient(
   );
 
   useEffect(() => {
-    const abortController = new AbortController();
+    // can't get aborts to work properly
+    // const abortController = new AbortController();
 
     if (imageData && client && previousImageData !== imageData) {
-      transform(imageData, client, transformations, abortController).then(
-        setTransformResults,
-      );
+      transform(imageData, client, transformations).then(setTransformResults);
     }
 
     return () => {
-      abortController.abort();
+      // abortController.abort();
     };
   }, [imageData, client, transformations, previousImageData]);
 
