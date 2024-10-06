@@ -8,7 +8,7 @@ import {
 } from "../transform/Transforms.ts";
 import { isImageToImageTransform } from "../transform/Transform.ts";
 import { Rectangles } from "../shapes/Rectangle.tsx";
-import { Box, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
 import { useStageTest } from "../test-context/useStageTest.ts";
 import { useFrames } from "../frame-context/useFrames.ts";
@@ -226,7 +226,12 @@ function ZoneEditorBody({ imageData }: RegionTransformationsBodyProps) {
       alignItems={"center"}
       overflow="auto"
     >
-      <Box display={"flex"} width={200} height={200} alignItems={"center"}>
+      <SkeletonBox
+        showSkeleton={!(imageData instanceof Uint8Array)}
+        boxProps={{ display: "flex", alignItems: "center" }}
+        width={200}
+        height={200}
+      >
         {imageData instanceof Uint8Array ? (
           <img
             src={URL.createObjectURL(new Blob([imageData]))}
@@ -235,7 +240,7 @@ function ZoneEditorBody({ imageData }: RegionTransformationsBodyProps) {
         ) : (
           <Typography>{imageData}</Typography>
         )}
-      </Box>
+      </SkeletonBox>
     </Stack>
   );
 }
