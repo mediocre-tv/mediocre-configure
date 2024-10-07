@@ -1,10 +1,15 @@
 import { PropsWithChildren, useState } from "react";
-import { GrpcContextProps } from "./GrpcContext.ts";
-import useValidateGrpcContext from "./useValidateGrpcContext.ts";
+import useValidateGrpcTransport from "./useValidateGrpcTransport.ts";
 import GrpcConfigDialog from "./GrpcConfigDialog.tsx";
 import GrpcProvider from "./GrpcProvider.tsx";
+import { getTransport } from "./GrpcContext.ts";
 
-const defaultContext: GrpcContextProps = {
+export interface GrpcTransportParts {
+  domain: string;
+  port: string;
+}
+
+const defaultParts: GrpcTransportParts = {
   domain: import.meta.env.VITE_CLIENT_DOMAIN,
   port:
     location.protocol === "https:"
@@ -15,21 +20,25 @@ const defaultContext: GrpcContextProps = {
 export default function GrpcProviderWithDialog({
   children,
 }: PropsWithChildren) {
-  const { validating: defaultContextValidating, valid: defaultContextValid } =
-    useValidateGrpcContext(defaultContext);
-  const [customContext, setCustomContext] = useState<GrpcContextProps | null>(
+  const { validating: defaultPartsValidating, valid: defaultPartsValid } =
+    useValidateGrpcTransport(defaultParts);
+  const [customParts, setCustomParts] = useState<GrpcTransportParts | null>(
     null,
   );
 
-  const context =
-    customContext ?? (defaultContextValid ? defaultContext : null);
+  const transportParts =
+    customParts ?? (defaultPartsValid ? defaultParts : null);
+
+  const context = transportParts
+    ? { transport: getTransport(transportParts) }
+    : null;
 
   return (
     <>
       <GrpcConfigDialog
-        open={!defaultContextValidating && !context}
-        context={context}
-        setContext={setCustomContext}
+        open={!defaultPartsValidating && !context}
+        parts={transportParts}
+        setParts={setCustomParts}
       />
       <GrpcProvider context={context}>{children}</GrpcProvider>
     </>

@@ -1,7 +1,8 @@
-import { getTransport, GrpcContextProps } from "./GrpcContext.ts";
+import { getTransport } from "./GrpcContext.ts";
 import { HealthClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/grpc/health/v1/health_pb.client";
 import { HealthCheckResponse_ServingStatus } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/grpc/health/v1/health_pb";
 import { RpcError } from "@protobuf-ts/runtime-rpc/build/types/rpc-error";
+import { GrpcTransportParts } from "./GrpcProviderWithDialog.tsx";
 
 export function isRpcError(error: unknown): error is RpcError {
   return (
@@ -22,8 +23,8 @@ export function isErrorWithMessage(error: unknown): error is Error {
   );
 }
 
-export async function checkHealth(context: GrpcContextProps) {
-  const transport = getTransport(context);
+export async function checkHealth(parts: GrpcTransportParts) {
+  const transport = getTransport(parts);
   const client = new HealthClient(transport);
 
   try {

@@ -8,29 +8,29 @@ import {
   DialogTitle,
   TextField,
 } from "@mui/material";
-import { GrpcContextProps } from "./GrpcContext.ts";
 import { checkHealth } from "./GrpcHealth.ts";
 import Grid from "@mui/material/Grid2";
 import LoadingButton from "@mui/lab/LoadingButton";
+import { GrpcTransportParts } from "./GrpcProviderWithDialog.tsx";
 
 interface GrpcConfigDialogProps {
   open: boolean;
-  context: GrpcContextProps | null;
-  setContext: (context: GrpcContextProps) => void;
+  parts: GrpcTransportParts | null;
+  setParts: (parts: GrpcTransportParts) => void;
 }
 
 export default function GrpcConfigDialog({
   open,
-  context,
-  setContext,
+  parts,
+  setParts,
 }: GrpcConfigDialogProps) {
   const [isValid, setIsValid] = useState<boolean | null>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isValidating = isValid === null;
 
-  const [domain, setDomain] = useState(context?.domain ?? "");
-  const [port, setPort] = useState(context?.port ?? "");
-  const newContext: GrpcContextProps = {
+  const [domain, setDomain] = useState(parts?.domain ?? "");
+  const [port, setPort] = useState(parts?.port ?? "");
+  const newParts: GrpcTransportParts = {
     domain: domain,
     port: port,
   };
@@ -40,13 +40,13 @@ export default function GrpcConfigDialog({
     event.preventDefault();
 
     setIsValid(null);
-    const result = await checkHealth(newContext);
+    const result = await checkHealth(newParts);
 
     setIsValid(result.isValid);
     setErrorMessage(result.errorMessage);
 
     if (result.isValid) {
-      setContext(newContext);
+      setParts(newParts);
     }
   }
 

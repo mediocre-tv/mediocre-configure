@@ -5,17 +5,17 @@ import { transform, TransformResult } from "../transform/Transform.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
 import { usePrevious } from "react-use";
+import { GrpcTransportParts } from "./GrpcProviderWithDialog.tsx";
 
 export interface GrpcContextProps {
-  domain: string;
-  port: string;
+  transport: GrpcWebFetchTransport;
 }
 
 export const GrpcContext = createContext<GrpcContextProps | null>(null);
 
-export function getTransport(context: GrpcContextProps) {
+export function getTransport(parts: GrpcTransportParts) {
   return new GrpcWebFetchTransport({
-    baseUrl: `${location.protocol}//${context.domain}:${context.port}`,
+    baseUrl: `${location.protocol}//${parts.domain}:${parts.port}`,
   });
 }
 
@@ -26,8 +26,7 @@ export function useGrpcClient<T extends ServiceInfo>(
 
   return useMemo(() => {
     if (context) {
-      const transport = getTransport(context);
-      return new clientConstructor(transport);
+      return new clientConstructor(context.transport);
     }
   }, [context, clientConstructor]);
 }
