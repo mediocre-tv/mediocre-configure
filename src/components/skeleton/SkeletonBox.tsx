@@ -18,10 +18,13 @@ export function SkeletonBox({
   aspectRatio,
   boxProps,
 }: SkeletonBoxProps) {
+  const widthOr1 = width ?? (!height && !aspectRatio ? 1 : undefined);
+  const heightOr1 = height ?? (!width && !aspectRatio ? 1 : undefined);
+
   return (
     <Box
-      width={width ?? 1}
-      height={height ?? 1}
+      width={widthOr1}
+      height={heightOr1}
       sx={{ aspectRatio: aspectRatio }}
       {...boxProps}
     >

@@ -31,12 +31,13 @@ export function useGrpcClient<T extends ServiceInfo>(
   }, [context, clientConstructor]);
 }
 
-export function useTransformClient(
+export function useTransforms(
   imageData: Uint8Array | null,
   transformations: Transform[],
+  id?: string,
 ) {
   const client = useGrpcClient(TransformServiceClient);
-  const previousImageData = usePrevious(imageData);
+  const previous = usePrevious({ id, imageData });
   const [transformResults, setTransformResults] = useState<TransformResult[]>(
     [],
   );
@@ -45,14 +46,26 @@ export function useTransformClient(
     // can't get aborts to work properly
     // const abortController = new AbortController();
 
-    if (imageData && client && previousImageData !== imageData) {
+    if (
+      imageData &&
+      client &&
+      (previous?.imageData !== imageData || id !== previous?.id)
+    ) {
       transform(imageData, client, transformations).then(setTransformResults);
     }
 
     return () => {
       // abortController.abort();
     };
-  }, [imageData, client, transformations, previousImageData]);
+  }, [id, imageData, client, transformations, previous]);
 
   return transformResults;
+}
+
+export function useTransform(
+  imageData: Uint8Array | null,
+  transformation: Transform,
+  id?: string,
+) {
+  return useTransforms(imageData, [transformation], id)[0];
 }

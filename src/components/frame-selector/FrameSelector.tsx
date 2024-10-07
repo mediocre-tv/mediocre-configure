@@ -1,29 +1,27 @@
 import { useCallback, useEffect, useState } from "react";
-import { Frame } from "./useVideoFrame.ts";
 import { Alert, Button, Stack } from "@mui/material";
 import {
   FrameAwareVideoPlayer,
   FrameAwareVideoPlayerRef,
 } from "./FrameAwareVideoPlayer.tsx";
+import { Frame } from "../frame-context/FrameContext.ts";
+import { isErrorWithMessage } from "../grpc/GrpcHealth.ts";
+import { usePrevious } from "react-use";
 
 export interface FrameSelectorProps {
-  videoUrl: string;
-  frames: Frame[];
-  setFrames: (frames: Frame[]) => void;
-  selectedFrame: number | null;
+  videoUrl: string | null;
+  addFrame: (frame: Frame) => void;
+  selectedFrame: Frame | null;
 }
 
 export function FrameSelector({
   videoUrl,
-  frames,
-  setFrames,
+  addFrame,
   selectedFrame,
 }: FrameSelectorProps) {
   const [videoPlayer, setVideoPlayer] =
     useState<FrameAwareVideoPlayerRef | null>(null);
-  const [previousSelectedFrame, setPreviousSelectedFrame] = useState<
-    number | null
-  >(null);
+  const previousSelectedFrame = usePrevious<Frame | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const onVideoPlayerRefChange = useCallback(
@@ -35,14 +33,18 @@ export function FrameSelector({
     [videoPlayer],
   );
 
-  const getFrame = () => {
+  const getFrame = async () => {
     if (videoPlayer) {
-      const frameOrError = videoPlayer.getFrame();
-      if ("error" in frameOrError) {
-        setError(frameOrError.error);
-      } else {
+      try {
+        const frame = await videoPlayer.getFrame();
         setError(null);
-        setFrames([...frames, frameOrError]);
+        addFrame(frame);
+      } catch (error) {
+        if (isErrorWithMessage(error)) {
+          setError(error.message);
+        } else {
+          throw error;
+        }
       }
     } else {
       setError("Video player is not available.");
@@ -63,8 +65,7 @@ export function FrameSelector({
 
   useEffect(() => {
     if (selectedFrame && selectedFrame !== previousSelectedFrame) {
-      seekToFrame(selectedFrame);
-      setPreviousSelectedFrame(selectedFrame);
+      seekToFrame(selectedFrame.time);
     }
   }, [previousSelectedFrame, seekToFrame, selectedFrame]);
 

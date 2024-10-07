@@ -16,7 +16,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { Frame } from "../frame-context/FrameContext.ts";
 import { useImageData } from "../image/useImageData.ts";
 import styles from "../regions-editor/RegionsEditor.module.css";
-import { useTransformClient } from "../grpc/GrpcContext.ts";
+import { useTransforms } from "../grpc/GrpcContext.ts";
 import { BoxWithHeaderActions } from "../layout/BoxWithHeaderLayout.tsx";
 import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
 
@@ -52,7 +52,7 @@ export function ZonesEditorSingleFrame({
   );
 }
 
-function getZoneTransforms(zone: Zone): Transforms {
+export function getZoneTransforms(zone: Zone): Transforms {
   return {
     id: zone.id,
     transformations: zone.transformations.map((transformation) => ({
@@ -99,7 +99,7 @@ function ZoneFramesViewer({
   const { stageTest } = useStageTest(stageId);
   const timestamps = stageTest.details.flatMap((details) => details.timestamps);
 
-  const frames = useFrames(timestamps);
+  const { frames } = useFrames(timestamps);
 
   useEffect(() => {
     if (!currentFrame?.image && frames.length > 0 && frames[0].image) {
@@ -213,11 +213,11 @@ function ZonesEditorSingleFrameRight({ zones, image }: ZoneEditorRightProps) {
   );
 }
 
-interface RegionTransformationsBodyProps {
+interface ZoneEditorBodyProps {
   imageData: Uint8Array | string;
 }
 
-function ZoneEditorBody({ imageData }: RegionTransformationsBodyProps) {
+function ZoneEditorBody({ imageData }: ZoneEditorBodyProps) {
   return (
     <Stack
       direction={"row"}
@@ -253,7 +253,7 @@ interface ZoneEditorProps {
 
 function ZoneEditor({ zoneId, imageData }: ZoneEditorProps) {
   const { zone, setZone, deleteZone } = useZone(zoneId);
-  const results = useTransformClient(
+  const results = useTransforms(
     imageData,
     getZoneTransforms(zone).transformations,
   );

@@ -68,7 +68,9 @@ export function FrameProvider({ children }: PropsWithChildren) {
   }
 
   return (
-    <FrameContext.Provider value={{ frames }}>{children}</FrameContext.Provider>
+    <FrameContext.Provider value={{ frames, setFrames }}>
+      {children}
+    </FrameContext.Provider>
   );
 
   function setSortedFrames(newFrames: Frame[]) {

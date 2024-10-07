@@ -1,13 +1,15 @@
 import { forwardRef, useImperativeHandle } from "react";
-import { FrameOrError, useVideoFrame } from "./useVideoFrame.ts";
+import { useVideoFrame } from "./useVideoFrame.ts";
+import { Frame } from "../frame-context/FrameContext.ts";
+import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
 
 export interface FrameAwareVideoPlayerRef {
-  getFrame: () => FrameOrError;
+  getFrame: () => Promise<Frame>;
   seekToFrame: (time: number) => void;
 }
 
 export interface FrameAwareVideoPlayerProps {
-  videoUrl: string;
+  videoUrl: string | null;
 }
 
 export const FrameAwareVideoPlayer = forwardRef<
@@ -22,15 +24,17 @@ export const FrameAwareVideoPlayer = forwardRef<
   }));
 
   return (
-    <>
-      <video
-        ref={videoRef}
-        src={videoUrl}
-        controls
-        width="100%"
-        height="100%"
-      />
+    <SkeletonBox showSkeleton={!videoUrl}>
+      {videoUrl && (
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          controls
+          width="100%"
+          height="100%"
+        />
+      )}
       <canvas ref={canvasRef} style={{ display: "none" }} />
-    </>
+    </SkeletonBox>
   );
 });

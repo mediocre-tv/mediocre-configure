@@ -30,7 +30,37 @@ async function setup(url: string, signal?: AbortSignal) {
   };
 }
 
-async function captureFramesAtTimestamps(
+export async function captureFrame(
+  video: HTMLVideoElement,
+  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D,
+  signal?: AbortSignal,
+) {
+  // We must wait for the video to seek to the correct time
+  const url = await new Promise<string>((resolve, reject) =>
+    video.requestVideoFrameCallback(() => {
+      if (signal?.aborted) {
+        reject("Aborted frame capture");
+      }
+
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject("Failed to capture frame");
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+        resolve(url);
+      });
+    }),
+  );
+
+  return { time: video.currentTime, image: url };
+}
+
+export async function captureFramesAtTimestamps(
   times: number[],
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,
@@ -40,28 +70,8 @@ async function captureFramesAtTimestamps(
 ) {
   for (const time of times) {
     video.currentTime = time;
-
-    // We must wait for the video to seek to the correct time
-    const url = await new Promise<string>((resolve, reject) =>
-      video.requestVideoFrameCallback(() => {
-        if (signal.aborted) {
-          reject("Aborted frame capture");
-        }
-
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            throw new Error("Failed to capture frame");
-          }
-
-          const url = URL.createObjectURL(blob);
-          resolve(url);
-        });
-      }),
-    );
-
-    addFrame({ time, image: url });
+    const frame = await captureFrame(video, canvas, context, signal);
+    addFrame(frame);
   }
 }
 

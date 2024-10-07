@@ -15,7 +15,7 @@ import { Region } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/med
 import { Fragment, useRef, useState } from "react";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
-import { useGrpcClient, useTransformClient } from "../grpc/GrpcContext.ts";
+import { useGrpcClient, useTransforms } from "../grpc/GrpcContext.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
 import { Dimensions } from "../shapes/Dimensions.ts";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
@@ -215,7 +215,7 @@ function RegionTransformations({
   imageData,
 }: RegionTransformationsProps) {
   const { name, transformations } = region;
-  const transformResults = useTransformClient(imageData, transformations);
+  const transformResults = useTransforms(imageData, transformations);
   const setTransformations = (transformations: Transform[]) =>
     onUpdateRegion({ ...region, transformations });
   const setName = (name: string) => onUpdateRegion({ ...region, name });
