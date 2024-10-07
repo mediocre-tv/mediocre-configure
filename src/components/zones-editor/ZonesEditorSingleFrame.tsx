@@ -222,6 +222,7 @@ function ZoneEditorBody({ imageData }: RegionTransformationsBodyProps) {
     <Stack
       direction={"row"}
       spacing={2}
+      padding={1}
       justifyContent={"space-between"}
       alignItems={"center"}
       overflow="auto"
