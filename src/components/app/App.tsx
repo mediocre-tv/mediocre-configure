@@ -5,7 +5,6 @@ import "@fontsource/roboto/700.css";
 import useLocalState from "../../hooks/UseLocalState.tsx";
 import { GameConfiguration } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/game_pb";
 import { v4 as uuid } from "uuid";
-import { StagesEditor } from "../stages-editor/StagesEditor.tsx";
 import {
   TestConfiguration,
   Video,
@@ -17,6 +16,7 @@ import { FrameProvider } from "../providers/frame/FrameProvider.tsx";
 import { TransformResultsProvider } from "../providers/transform-results/TransformResultsProvider.tsx";
 import { VideoProvider } from "../providers/video/VideoProvider.tsx";
 import { getRandomTimestamps } from "../video/GrabFrames.ts";
+import { Outlet } from "react-router-dom";
 
 function getDefaultGameConfiguration(): GameConfiguration {
   return {
@@ -71,7 +71,7 @@ function App() {
           >
             <FrameProvider>
               <TransformResultsProvider>
-                <StagesEditor />
+                <Outlet />
               </TransformResultsProvider>
             </FrameProvider>
           </ConfigurationProvider>
