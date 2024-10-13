@@ -3,13 +3,13 @@ import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
 import { TransformResultOrError } from "../providers/transform-results/TransformResultsContext.ts";
 
 interface TransformResultViewerProps {
-  timestamp: number;
+  label: string;
   results: TransformResultOrError[];
   onClick?: () => void;
 }
 
 export function TransformResultViewer({
-  timestamp,
+  label,
   results,
   onClick,
 }: TransformResultViewerProps) {
@@ -17,17 +17,8 @@ export function TransformResultViewer({
     results.find((result) => "error" in result) ??
     results.at(results.length - 1);
 
-  const prettyTime = new Date(timestamp * 1000).toISOString().slice(14, 19);
-
   return (
-    <Stack
-      margin={1}
-      border={1}
-      borderRadius={1}
-      width={200}
-      onClick={onClick}
-      sx={{ cursor: "pointer" }}
-    >
+    <Stack margin={1} width={200} onClick={onClick} sx={{ cursor: "pointer" }}>
       <SkeletonBox
         showSkeleton={!result}
         aspectRatio={"16/9"}
@@ -51,7 +42,7 @@ export function TransformResultViewer({
           ))}
       </SkeletonBox>
       <Typography textAlign={"center"} paddingBottom={1}>
-        {prettyTime}
+        {label}
       </Typography>
     </Stack>
   );

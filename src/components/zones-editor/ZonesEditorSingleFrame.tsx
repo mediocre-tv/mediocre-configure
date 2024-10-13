@@ -23,6 +23,7 @@ import { useZoneResults } from "../providers/zone/useZoneResults.ts";
 import { useZone } from "../providers/zone/useZone.ts";
 import { TransformResultViewer } from "./TransformResultViewer.tsx";
 import { ZoneEditorViewToggles, ZonesEditorView } from "./ZonesEditor.tsx";
+import { getPrettyTime } from "../../utilities/timestamp.ts";
 
 export interface ZonesEditorSingleFrameProps {
   setZoneView: (view: ZonesEditorView) => void;
@@ -172,7 +173,7 @@ function ZonesFrameViewer({
           />
         )}
       </SkeletonBox>
-      <Typography textAlign={"center"}>{timestamp.toFixed(3)}s</Typography>
+      <Typography textAlign={"center"}>{getPrettyTime(timestamp)}</Typography>
     </Stack>
   );
 }
@@ -263,7 +264,10 @@ function ZoneEditorBody({ timestamp }: ZoneEditorBodyProps) {
   const { transformResults } = useZoneResults(timestamp);
 
   return (
-    <TransformResultViewer timestamp={timestamp} results={transformResults} />
+    <TransformResultViewer
+      label={getPrettyTime(timestamp)}
+      results={transformResults}
+    />
   );
 }
 

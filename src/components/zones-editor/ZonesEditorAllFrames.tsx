@@ -12,6 +12,7 @@ import { usePrevious } from "react-use";
 import { VideoWithHiddenCanvas } from "../frame-selector/VideoWithHiddenCanvas.tsx";
 import { ZoneEditorViewToggles, ZonesEditorView } from "./ZonesEditor.tsx";
 import { useFrame } from "../providers/frame/useFrame.ts";
+import { useZone } from "../providers/zone/useZone.ts";
 
 export interface ZonesEditorAllFramesProps {
   setZoneView: (view: ZonesEditorView) => void;
@@ -165,12 +166,13 @@ interface ZoneFrameViewerParams {
 }
 
 function ZoneFrameViewer({ timestamp, onClick }: ZoneFrameViewerParams) {
+  const { zone } = useZone();
   const { transformResults } = useZoneResults(timestamp);
 
   return (
     <Box>
       <TransformResultViewer
-        timestamp={timestamp}
+        label={zone.name}
         results={transformResults}
         onClick={onClick}
       />
