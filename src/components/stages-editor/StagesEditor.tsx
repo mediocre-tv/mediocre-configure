@@ -5,6 +5,7 @@ import { useStage } from "../providers/stage/useStage";
 import { useFrame } from "../providers/frame/useFrame.ts";
 import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
 import { StageProvider } from "../providers/stage/StageProvider.tsx";
+import { useCollapsedId } from "../providers/hooks/useCollapsedId.ts";
 
 export function StagesEditor() {
   // just assuming a single stage for now
@@ -30,6 +31,7 @@ function StageViewer() {
   const { stage } = useStage();
   const times = stage.tests[0].times;
   const frame = useFrame(times[times.length / 2]);
+  const collapsedId = useCollapsedId(stage.id);
 
   return (
     <Stack alignItems={"center"}>
@@ -48,7 +50,7 @@ function StageViewer() {
       </SkeletonBox>
       <Typography textAlign={"center"}>
         {`${stage.name} - `}
-        <Link to={`/stages/${stage.id}/zones`}>Zones</Link>
+        <Link to={`/stages/${collapsedId}/zones`}>Zones</Link>
       </Typography>
     </Stack>
   );
