@@ -12,7 +12,7 @@ export function LongOrSideBySideLayout({
   rightChild,
 }: LongOrSideBySideLayoutProps) {
   return (
-    <Box width={1} height={1} display="flex" justifyContent="center" p={10}>
+    <Box width={1} height={1} display="flex" justifyContent="center" p={5}>
       <Grid container width={1} spacing={10}>
         <Grid size={{ xs: 12, lg: 6 }}>{leftChild}</Grid>
         <Grid height={1} size={{ xs: 12, lg: 6 }}>

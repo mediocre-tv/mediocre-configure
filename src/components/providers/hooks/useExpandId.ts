@@ -2,7 +2,7 @@ import { useStages } from "../stage/useStages.ts";
 import { useZones } from "../zone/useZones.ts";
 import { useRegions } from "../region/useRegions.ts";
 
-export function useExpandedId(collapsedId: string) {
+export function useExpandId() {
   const { stages } = useStages();
   const { zones } = useZones();
   const { regions } = useRegions();
@@ -13,13 +13,15 @@ export function useExpandedId(collapsedId: string) {
     ...Array.from(regions.keys()),
   ];
 
-  const id = expandId(collapsedId, ids);
+  return (collapsedId: string) => {
+    const id = expandId(collapsedId, ids);
 
-  if (!id) {
-    throw new Error(`No id found for ${collapsedId}`);
-  }
+    if (!id) {
+      throw new Error(`No id found for ${collapsedId}`);
+    }
 
-  return id;
+    return id;
+  };
 }
 
 export function expandId(

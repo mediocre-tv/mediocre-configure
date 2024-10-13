@@ -17,6 +17,7 @@ import { TransformResultsProvider } from "../providers/transform-results/Transfo
 import { VideoProvider } from "../providers/video/VideoProvider.tsx";
 import { getRandomTimestamps } from "../video/GrabFrames.ts";
 import { Outlet } from "react-router-dom";
+import { AppLayout } from "./AppLayout.tsx";
 
 function getDefaultGameConfiguration(): GameConfiguration {
   return {
@@ -71,7 +72,9 @@ function App() {
           >
             <FrameProvider>
               <TransformResultsProvider>
-                <Outlet />
+                <AppLayout>
+                  <Outlet />
+                </AppLayout>
               </TransformResultsProvider>
             </FrameProvider>
           </ConfigurationProvider>

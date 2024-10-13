@@ -2,7 +2,7 @@ import { useStages } from "../stage/useStages.ts";
 import { useZones } from "../zone/useZones.ts";
 import { useRegions } from "../region/useRegions.ts";
 
-export function useCollapsedId(id: string) {
+export function useCollapseId() {
   const { stages } = useStages();
   const { zones } = useZones();
   const { regions } = useRegions();
@@ -13,7 +13,7 @@ export function useCollapsedId(id: string) {
     ...Array.from(regions.keys()),
   ];
 
-  return collapseId(id, ids);
+  return (id: string) => collapseId(id, ids);
 }
 
 function collapseId(id: string, otherIds: string[]): string {
