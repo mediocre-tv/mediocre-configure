@@ -3,7 +3,7 @@ import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
 import { TransformResultOrError } from "../providers/transform-results/TransformResultsContext.ts";
 
 interface TransformResultViewerProps {
-  label: string;
+  label?: string;
   results: TransformResultOrError[];
   onClick?: () => void;
 }
@@ -41,9 +41,11 @@ export function TransformResultViewer({
             <Typography>{result.text}</Typography>
           ))}
       </SkeletonBox>
-      <Typography textAlign={"center"} paddingBottom={1}>
-        {label}
-      </Typography>
+      {label && (
+        <Typography textAlign={"center"} paddingBottom={1}>
+          {label}
+        </Typography>
+      )}
     </Stack>
   );
 }

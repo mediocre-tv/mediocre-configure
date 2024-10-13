@@ -264,10 +264,9 @@ function ZoneEditorBody({ timestamp }: ZoneEditorBodyProps) {
   const { transformResults } = useZoneResults(timestamp);
 
   return (
-    <TransformResultViewer
-      label={getPrettyTime(timestamp)}
-      results={transformResults}
-    />
+    <Stack direction={"row"} justifyContent={"space-between"}>
+      <TransformResultViewer results={transformResults} />
+    </Stack>
   );
 }
 
