@@ -5,13 +5,13 @@ import {
   DialogTitle,
   Stack,
 } from "@mui/material";
-import { DragDropVideo } from "../video/DragDropVideo.tsx";
-import { Video } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/test/v1beta/test_pb";
+import { DragDropVideo } from "../../video/DragDropVideo.tsx";
+import { Video } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/test_pb";
 
 interface VideoDialogProps {
   open: boolean;
   error: string | null;
-  video?: Video;
+  video: Video | undefined;
   onSelectVideo: (name: string, video: string) => void;
 }
 

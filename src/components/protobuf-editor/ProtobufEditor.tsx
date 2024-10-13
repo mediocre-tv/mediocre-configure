@@ -14,8 +14,8 @@ import {
   IMessageType,
   MESSAGE_TYPE,
 } from "@protobuf-ts/runtime";
-import { isErrorWithMessage } from "../grpc/GrpcHealth.ts";
 import { ProtobufEditorMessage } from "./ProtobufEditorMessage.tsx";
+import { isErrorWithMessage } from "../providers/grpc/GrpcHealth.ts";
 
 const protobufEditorViews = ["Form", "JSON"] as const;
 type ProtobufEditorView = (typeof protobufEditorViews)[number];

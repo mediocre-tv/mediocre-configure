@@ -2,15 +2,13 @@ import { useState } from "react";
 import { ZonesEditorSingleFrame } from "./ZonesEditorSingleFrame.tsx";
 import { ZonesEditorAllFrames } from "./ZonesEditorAllFrames.tsx";
 import { Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { useStage } from "../providers/stage/useStage.ts";
+import { useZones } from "../providers/zone/useZones.ts";
 
 const zonesEditorViews = ["Single Frame", "All Frames"] as const;
 type ZonesEditorView = (typeof zonesEditorViews)[number];
 
-export interface ZonesEditorProps {
-  stageId: string;
-}
-
-export function ZonesEditor({ stageId }: ZonesEditorProps) {
+export function ZonesEditor() {
   const [zoneView, setZoneView] = useState<ZonesEditorView>("Single Frame");
 
   const changeViewToggles = (
@@ -29,15 +27,34 @@ export function ZonesEditor({ stageId }: ZonesEditorProps) {
     </Box>
   );
 
+  const { stage } = useStage();
+  const { zones } = useZones();
+
+  const zonesTimestamps = Array.from(zones.values()).flatMap((zone) =>
+    zone.tests.map((test) => test.time),
+  );
+  const stageTimestamps = stage.tests[0].times;
+  const timestamps = [
+    ...new Set(zonesTimestamps.length > 0 ? zonesTimestamps : stageTimestamps),
+  ];
+
+  const [selectedTimestamp, setSelectedTimestamp] = useState<number>(
+    timestamps[0],
+  );
+
   return zoneView === "Single Frame" ? (
     <ZonesEditorSingleFrame
-      stageId={stageId}
       changeViewToggles={changeViewToggles}
+      timestamps={timestamps}
+      selectedTimestamp={selectedTimestamp}
+      setSelectedTimestamp={setSelectedTimestamp}
     />
   ) : (
     <ZonesEditorAllFrames
-      stageId={stageId}
       changeViewToggles={changeViewToggles}
+      timestamps={timestamps}
+      selectedTimestamp={selectedTimestamp}
+      setSelectedTimestamp={setSelectedTimestamp}
     />
   );
 }

@@ -1,6 +1,4 @@
-import { useZone, useZones } from "../configuration/useZone.ts";
 import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
-import { Zone } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/configuration_pb";
 import {
   getRectangles,
   setTransforms,
@@ -10,52 +8,54 @@ import { isImageToImageTransform } from "../transform/Transform.ts";
 import { Rectangles } from "../shapes/Rectangle.tsx";
 import { Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
-import { useStageTest } from "../test-context/useStageTest.ts";
-import { useFrames } from "../frame-context/useFrames.ts";
-import { ReactNode, useEffect, useState } from "react";
-import { Frame } from "../frame-context/FrameContext.ts";
-import { useImageData } from "../image/useImageData.ts";
-import styles from "../regions-editor/RegionsEditor.module.css";
-import { useTransforms } from "../grpc/GrpcContext.ts";
+import { ReactNode } from "react";
 import { BoxWithHeaderActions } from "../layout/BoxWithHeaderLayout.tsx";
 import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
+import {
+  StageConfiguration,
+  ZoneConfiguration,
+  ZoneConfigurations,
+} from "../providers/configuration/ConfigurationContext.ts";
+import { useZones } from "../providers/zone/useZones.ts";
+import { useFrame } from "../providers/frame/useFrame.ts";
+import { useStage } from "../providers/stage/useStage.ts";
+import { ZoneProvider } from "../providers/zone/ZoneProvider.tsx";
+import { useZoneResults } from "../providers/zone/useZoneResults.ts";
+import { useZone } from "../providers/zone/useZone.ts";
+import { TransformResultViewer } from "./TransformResultViewer.tsx";
 
 export interface ZonesEditorSingleFrameProps {
-  stageId: string;
   changeViewToggles: ReactNode;
+  timestamps: number[];
+  selectedTimestamp: number;
+  setSelectedTimestamp: (time: number) => void;
 }
 
 export function ZonesEditorSingleFrame({
-  stageId,
   changeViewToggles,
+  timestamps,
+  selectedTimestamp,
+  setSelectedTimestamp,
 }: ZonesEditorSingleFrameProps) {
-  const { zones } = useZones(stageId);
-  const [currentFrame, setCurrentFrame] = useState<Frame | null>(null);
-
   return (
     <LongOrSideBySideLayout
       leftChild={
         <ZonesEditorSingleFrameLeft
-          stageId={stageId}
-          currentFrame={currentFrame}
-          setCurrentFrame={setCurrentFrame}
+          timestamps={timestamps}
+          selectedTimestamp={selectedTimestamp}
+          setSelectedTimestamp={setSelectedTimestamp}
           changeViewToggles={changeViewToggles}
         />
       }
-      rightChild={
-        <ZonesEditorSingleFrameRight
-          zones={zones}
-          image={currentFrame?.image ?? null}
-        />
-      }
+      rightChild={<ZonesEditorSingleFrameRight timestamp={selectedTimestamp} />}
     />
   );
 }
 
-export function getZoneTransforms(zone: Zone): Transforms {
+export function getZoneTransforms(zone: ZoneConfiguration): Transforms {
   return {
     id: zone.id,
-    transformations: zone.transformations.map((transformation) => ({
+    transformations: zone.transforms.map((transformation) => ({
       transformation: {
         oneofKind: "imageToImage",
         imageToImage: transformation,
@@ -65,47 +65,52 @@ export function getZoneTransforms(zone: Zone): Transforms {
 }
 
 function setZoneTransforms(
+  stage: StageConfiguration,
+  zones: ZoneConfigurations,
   transforms: Transforms[],
-  setZones: (zones: Zone[]) => void,
+  setZones: (zones: ZoneConfigurations) => void,
+  timestamps: number[],
 ) {
-  const updatedZones = transforms.map((transform, index) => {
-    return Zone.create({
-      id: transform.id,
-      name: (transform["name"] as string) ?? `Zone ${index + 1}`,
-      transformations: transform.transformations
+  const updatedZones: ZoneConfigurations = new Map(
+    transforms.map((transform, index) => {
+      const oldZone = zones.get(transform.id);
+      const newTransforms = transform.transformations
         .filter(isImageToImageTransform)
         .map((transform) => {
           return transform.transformation.imageToImage;
-        }),
-    });
-  });
+        });
+      const newZone: ZoneConfiguration = oldZone
+        ? {
+            ...oldZone,
+            transforms: newTransforms,
+          }
+        : {
+            id: transform.id,
+            name: `Zone ${index + 1}`,
+            stagePaths: [{ stageId: stage.id }],
+            regionIds: [],
+            transforms: newTransforms,
+            tests: timestamps.map((time) => ({ time, visible: true })),
+          };
+      return [transform.id, newZone];
+    }),
+  );
   setZones(updatedZones);
 }
 
 interface ZoneFramesViewerProps {
-  stageId: string;
-  currentFrame: Frame | null;
-  setCurrentFrame: (frame: Frame) => void;
+  timestamps: number[];
+  selectedTimestamp: number;
+  setSelectedTimestamp: (time: number) => void;
 }
 
-function ZoneFramesViewer({
-  stageId,
-  currentFrame,
-  setCurrentFrame,
+function ZonesFramesViewer({
+  timestamps,
+  selectedTimestamp,
+  setSelectedTimestamp,
 }: ZoneFramesViewerProps) {
   const theme = useTheme();
   const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
-
-  const { stageTest } = useStageTest(stageId);
-  const timestamps = stageTest.details.flatMap((details) => details.timestamps);
-
-  const { frames } = useFrames(timestamps);
-
-  useEffect(() => {
-    if (!currentFrame?.image && frames.length > 0 && frames[0].image) {
-      setCurrentFrame(frames[0]);
-    }
-  }, [currentFrame, frames, setCurrentFrame]);
 
   return (
     <Stack
@@ -120,78 +125,96 @@ function ZoneFramesViewer({
             }),
       }}
     >
-      {frames
-        .filter((frame) => frame.time !== currentFrame?.time)
-        .map((frame, index) => (
-          <Stack key={index} spacing={1} padding={2}>
-            <SkeletonBox
-              showSkeleton={!frame.image}
-              width={200}
-              aspectRatio={"16/9"}
-            >
-              <img
-                src={frame.image}
-                width={"100%"}
-                onClick={() => setCurrentFrame(frame)}
-                style={{ cursor: "pointer" }}
-              />
-            </SkeletonBox>
-            <Typography textAlign={"center"}>
-              {frame.time.toFixed(3)}s
-            </Typography>
-          </Stack>
+      {timestamps
+        .filter((timestamp) => timestamp !== selectedTimestamp)
+        .map((timestamp) => (
+          <ZonesFrameViewer
+            key={timestamp}
+            timestamp={timestamp}
+            onClick={() => setSelectedTimestamp(timestamp)}
+          />
         ))}
     </Stack>
   );
 }
 
+interface ZonesFrameViewerProps {
+  timestamp: number;
+  onClick: () => void;
+}
+
+function ZonesFrameViewer({ timestamp, onClick }: ZonesFrameViewerProps) {
+  const frame = useFrame(timestamp);
+
+  return (
+    <Stack key={timestamp} spacing={1} padding={2}>
+      <SkeletonBox showSkeleton={!frame} width={200} aspectRatio={"16/9"}>
+        {frame && (
+          <img
+            src={frame}
+            width={"100%"}
+            onClick={onClick}
+            style={{ cursor: "pointer" }}
+          />
+        )}
+      </SkeletonBox>
+      <Typography textAlign={"center"}>{timestamp.toFixed(3)}s</Typography>
+    </Stack>
+  );
+}
+
 interface ZoneEditorLeftProps {
-  stageId: string;
-  currentFrame: Frame | null;
-  setCurrentFrame: (frame: Frame) => void;
+  timestamps: number[];
+  selectedTimestamp: number;
+  setSelectedTimestamp: (time: number) => void;
   changeViewToggles: ReactNode;
 }
 
 function ZonesEditorSingleFrameLeft({
-  stageId,
-  currentFrame,
-  setCurrentFrame,
+  timestamps,
+  selectedTimestamp,
+  setSelectedTimestamp,
   changeViewToggles,
 }: ZoneEditorLeftProps) {
-  const { zones, setZones } = useZones(stageId);
+  const frame = useFrame(selectedTimestamp);
+  const { stage } = useStage();
+  const { zones, setZones } = useZones();
 
-  const transforms = zones.map(getZoneTransforms);
+  const transforms = Array.from(zones)
+    .map(([, zone]) => zone)
+    .map(getZoneTransforms);
+
   const rectangles = getRectangles(transforms);
+
   const setRectangles = (rectangles: Rectangles) => {
     setTransforms(rectangles, transforms, (transforms: Transforms[]) =>
-      setZoneTransforms(transforms, setZones),
+      setZoneTransforms(stage, zones, transforms, setZones, timestamps),
     );
   };
 
   return (
     <Stack spacing={5}>
       <ImageLabeller
-        image={currentFrame?.image ?? null}
+        image={frame}
         rectangles={rectangles}
         setRectangles={setRectangles}
       />
       {changeViewToggles}
-      <ZoneFramesViewer
-        stageId={stageId}
-        currentFrame={currentFrame}
-        setCurrentFrame={setCurrentFrame}
+      <ZonesFramesViewer
+        timestamps={timestamps}
+        selectedTimestamp={selectedTimestamp}
+        setSelectedTimestamp={setSelectedTimestamp}
       />
     </Stack>
   );
 }
 
 interface ZoneEditorRightProps {
-  zones: Zone[];
-  image: string | null;
+  timestamp: number;
 }
 
-function ZonesEditorSingleFrameRight({ zones, image }: ZoneEditorRightProps) {
-  const imageData = useImageData(image);
+function ZonesEditorSingleFrameRight({ timestamp }: ZoneEditorRightProps) {
+  const { zones } = useZones();
   const theme = useTheme();
   const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
 
@@ -206,66 +229,40 @@ function ZonesEditorSingleFrameRight({ zones, image }: ZoneEditorRightProps) {
         }),
       }}
     >
-      {zones.map((zone) => (
-        <ZoneEditor key={zone.id} zoneId={zone.id} imageData={imageData} />
+      {Array.from(zones.keys()).map((id) => (
+        <ZoneProvider key={id} id={id}>
+          <ZoneEditor timestamp={timestamp} />
+        </ZoneProvider>
       ))}
     </Stack>
   );
 }
 
 interface ZoneEditorBodyProps {
-  imageData: Uint8Array | string;
+  timestamp: number;
 }
 
-function ZoneEditorBody({ imageData }: ZoneEditorBodyProps) {
+function ZoneEditorBody({ timestamp }: ZoneEditorBodyProps) {
+  const { transformResults } = useZoneResults(timestamp);
+
   return (
-    <Stack
-      direction={"row"}
-      spacing={2}
-      padding={1}
-      justifyContent={"space-between"}
-      alignItems={"center"}
-      overflow="auto"
-    >
-      <SkeletonBox
-        showSkeleton={!(imageData instanceof Uint8Array)}
-        boxProps={{ display: "flex", alignItems: "center" }}
-        width={200}
-        height={200}
-      >
-        {imageData instanceof Uint8Array ? (
-          <img
-            src={URL.createObjectURL(new Blob([imageData]))}
-            className={styles.image}
-          />
-        ) : (
-          <Typography>{imageData}</Typography>
-        )}
-      </SkeletonBox>
-    </Stack>
+    <TransformResultViewer timestamp={timestamp} results={transformResults} />
   );
 }
 
 interface ZoneEditorProps {
-  zoneId: string;
-  imageData: Uint8Array | null;
+  timestamp: number;
 }
 
-function ZoneEditor({ zoneId, imageData }: ZoneEditorProps) {
-  const { zone, setZone, deleteZone } = useZone(zoneId);
-  const results = useTransforms(
-    imageData,
-    getZoneTransforms(zone).transformations,
-  );
-  const zoneImageData = results.at(-1)?.result;
-  const setName = (name: string) => setZone({ ...zone, name });
+function ZoneEditor({ timestamp }: ZoneEditorProps) {
+  const { zone, setZone, deleteZone } = useZone();
 
   return (
     <BoxWithHeaderActions
       name={zone.name}
-      setName={setName}
+      setName={(name) => setZone({ ...zone, name })}
       actions={[{ onDelete: deleteZone }]}
-      body={<ZoneEditorBody imageData={zoneImageData ?? "No image data"} />}
+      body={<ZoneEditorBody timestamp={timestamp} />}
     />
   );
 }

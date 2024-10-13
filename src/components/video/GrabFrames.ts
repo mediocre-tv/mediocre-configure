@@ -1,5 +1,3 @@
-import { Frame } from "../frame-context/FrameContext.ts";
-
 async function setup(url: string, signal?: AbortSignal) {
   const video = document.createElement("video");
   const canvas = document.createElement("canvas");
@@ -37,7 +35,7 @@ export async function captureFrame(
   signal?: AbortSignal,
 ) {
   // We must wait for the video to seek to the correct time
-  const url = await new Promise<string>((resolve, reject) =>
+  return await new Promise<string>((resolve, reject) =>
     video.requestVideoFrameCallback(() => {
       if (signal?.aborted) {
         reject("Aborted frame capture");
@@ -56,8 +54,6 @@ export async function captureFrame(
       });
     }),
   );
-
-  return { time: video.currentTime, image: url };
 }
 
 export async function captureFramesAtTimestamps(
@@ -65,20 +61,20 @@ export async function captureFramesAtTimestamps(
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,
   context: CanvasRenderingContext2D,
-  addFrame: (frame: Frame) => void,
+  addFrame: (time: number, frame: string) => void,
   signal: AbortSignal,
 ) {
   for (const time of times) {
     video.currentTime = time;
     const frame = await captureFrame(video, canvas, context, signal);
-    addFrame(frame);
+    addFrame(time, frame);
   }
 }
 
 export async function getFramesFromVideo(
   url: string,
   times: number[],
-  addFrame: (frame: Frame) => void,
+  addFrame: (time: number, frame: string) => void,
   signal: AbortSignal,
 ) {
   const { canvas, ctx, video } = await setup(url, signal);
@@ -102,7 +98,8 @@ export function getRandomTimestamps(start: number, end: number, count: number) {
   const duration = end - start;
   return Array(count)
     .fill(0)
-    .map(() => start + Math.random() * duration);
+    .map(() => start + Math.random() * duration)
+    .sort((a, b) => a - b);
 }
 
 export async function getVideoDuration(url: string) {
