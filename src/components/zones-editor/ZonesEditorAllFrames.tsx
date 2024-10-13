@@ -1,7 +1,7 @@
 import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
 import { ReactNode, useState } from "react";
 import { FrameSelector } from "../frame-selector/FrameSelector.tsx";
-import { Stack, Typography } from "@mui/material";
+import { Stack, useMediaQuery, useTheme } from "@mui/material";
 import { useZones } from "../providers/zone/useZones.ts";
 import { ZoneProvider } from "../providers/zone/ZoneProvider.tsx";
 import { useZoneResults } from "../providers/zone/useZoneResults.ts";
@@ -32,6 +32,7 @@ export function ZonesEditorAllFrames({
         <ZonesEditorAllFramesLeft
           changeViewToggles={changeViewToggles}
           selectedTimestamp={selectedTimestamp}
+          selectedZoneId={selectedZoneId}
           setSelectedZoneId={setSelectedZoneId}
         />
       }
@@ -49,16 +50,17 @@ export function ZonesEditorAllFrames({
 interface ZonesEditorAllFramesLeftProps {
   changeViewToggles: ReactNode;
   selectedTimestamp: number;
+  selectedZoneId: string | null;
   setSelectedZoneId: (zoneId: string) => void;
 }
 
 function ZonesEditorAllFramesLeft({
   changeViewToggles,
   selectedTimestamp,
+  selectedZoneId,
   setSelectedZoneId,
 }: ZonesEditorAllFramesLeftProps) {
   const { configuration } = useConfiguration();
-  const { zones } = useZones();
 
   return (
     <Stack spacing={5}>
@@ -67,18 +69,50 @@ function ZonesEditorAllFramesLeft({
         selectedTime={selectedTimestamp}
       />
       {changeViewToggles}
-      {Array.from(zones.entries()).map(([id, zone]) => (
-        <Stack
-          key={id}
-          border={1}
-          borderRadius={1}
-          padding={1}
-          margin={1}
-          onClick={() => setSelectedZoneId(id)}
-          sx={{ cursor: "pointer" }}
-        >
-          <Typography>{zone.name}</Typography>
-        </Stack>
+      <ZoneListViewer
+        timestamp={selectedTimestamp}
+        selectedZoneId={selectedZoneId}
+        setSelectedZoneId={setSelectedZoneId}
+      />
+    </Stack>
+  );
+}
+
+interface ZoneListViewerProps {
+  timestamp: number;
+  selectedZoneId: string | null;
+  setSelectedZoneId: (id: string) => void;
+}
+
+function ZoneListViewer({
+  timestamp,
+  selectedZoneId,
+  setSelectedZoneId,
+}: ZoneListViewerProps) {
+  const theme = useTheme();
+  const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
+  const { zones } = useZones();
+
+  return (
+    <Stack
+      direction={"row"}
+      sx={{
+        ...(hasLgBreakpoint
+          ? {
+              flexWrap: "wrap",
+            }
+          : {
+              overflow: "auto",
+            }),
+      }}
+    >
+      {Array.from(zones.keys()).map((id) => (
+        <ZoneProvider key={id} id={id}>
+          <ZoneFrameViewer
+            timestamp={timestamp}
+            onClick={() => setSelectedZoneId(id)}
+          />
+        </ZoneProvider>
       ))}
     </Stack>
   );
