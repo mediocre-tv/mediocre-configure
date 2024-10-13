@@ -125,29 +125,43 @@ function ZonesFramesViewer({
             }),
       }}
     >
-      {timestamps
-        .filter((timestamp) => timestamp !== selectedTimestamp)
-        .map((timestamp) => (
-          <ZonesFrameViewer
-            key={timestamp}
-            timestamp={timestamp}
-            onClick={() => setSelectedTimestamp(timestamp)}
-          />
-        ))}
+      {timestamps.map((timestamp) => (
+        <ZonesFrameViewer
+          key={timestamp}
+          timestamp={timestamp}
+          selected={timestamp === selectedTimestamp}
+          onClick={() => setSelectedTimestamp(timestamp)}
+        />
+      ))}
     </Stack>
   );
 }
 
 interface ZonesFrameViewerProps {
   timestamp: number;
+  selected: boolean;
   onClick: () => void;
 }
 
-function ZonesFrameViewer({ timestamp, onClick }: ZonesFrameViewerProps) {
+function ZonesFrameViewer({
+  timestamp,
+  selected,
+  onClick,
+}: ZonesFrameViewerProps) {
   const frame = useFrame(timestamp);
 
   return (
-    <Stack key={timestamp} spacing={1} padding={2}>
+    <Stack
+      key={timestamp}
+      spacing={1}
+      padding={2}
+      borderRadius={2}
+      sx={{
+        ...(selected && {
+          backgroundColor: (theme) => theme.palette.action.selected,
+        }),
+      }}
+    >
       <SkeletonBox showSkeleton={!frame} width={200} aspectRatio={"16/9"}>
         {frame && (
           <img
