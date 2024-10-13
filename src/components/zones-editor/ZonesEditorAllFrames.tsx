@@ -11,6 +11,7 @@ import { useVideoFrame } from "../frame-selector/useVideoFrame.ts";
 import { usePrevious } from "react-use";
 import { VideoWithHiddenCanvas } from "../frame-selector/VideoWithHiddenCanvas.tsx";
 import { ZoneEditorViewToggles, ZonesEditorView } from "./ZonesEditor.tsx";
+import { useFrame } from "../providers/frame/useFrame.ts";
 
 export interface ZonesEditorAllFramesProps {
   setZoneView: (view: ZonesEditorView) => void;
@@ -63,7 +64,10 @@ function ZonesEditorAllFramesLeft({
 }: ZonesEditorAllFramesLeftProps) {
   const { configuration } = useConfiguration();
   const { zones, setZones } = useZones();
-  const { videoRef, canvasRef, getTimestamp, seek } = useVideoFrame();
+  const [videoReady, setVideoReady] = useState(false);
+  const { videoRef, canvasRef, getTimestamp, seek } = useVideoFrame(() =>
+    setVideoReady(true),
+  );
 
   const previousSelectedTime = usePrevious(selectedTimestamp);
   useEffect(() => {
@@ -71,6 +75,8 @@ function ZonesEditorAllFramesLeft({
       seek(selectedTimestamp);
     }
   }, [previousSelectedTime, seek, selectedTimestamp]);
+
+  const fallbackImage = useFrame(selectedTimestamp);
 
   const onAddScreenshot = () => {
     const time = getTimestamp();
@@ -89,9 +95,11 @@ function ZonesEditorAllFramesLeft({
   return (
     <Stack spacing={5}>
       <VideoWithHiddenCanvas
+        videoReady={videoReady}
         videoRef={videoRef}
         canvasRef={canvasRef}
         videoUrl={configuration.videoUrl}
+        fallbackImage={fallbackImage}
       />
       <Stack direction={"row"} sx={{ position: "relative" }}>
         <ZoneEditorViewToggles

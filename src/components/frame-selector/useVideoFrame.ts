@@ -1,4 +1,4 @@
-import { Ref, useCallback, useRef } from "react";
+import { Ref, useCallback, useEffect, useRef } from "react";
 
 export interface VideoActions {
   getTimestamp: () => number;
@@ -12,29 +12,37 @@ export interface VideoRefs {
 
 export type useVideoFrameReturns = VideoActions & VideoRefs;
 
-export const useVideoFrame = (): useVideoFrameReturns => {
+export const useVideoFrame = (
+  onLoadedData?: () => void,
+): useVideoFrameReturns => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const getTimestamp = useCallback(() => {
-    if (!videoRef.current) {
+    const video = videoRef.current;
+    if (!video) {
       throw new Error("No video ref");
     }
 
-    return videoRef.current.currentTime;
+    return video.currentTime;
   }, [videoRef]);
 
   const seek = useCallback(
     (time: number) => {
-      if (!videoRef.current) {
-        throw new Error("No video ref");
-      }
-
       const video = videoRef.current;
-      video.currentTime = time;
+      if (video) {
+        video.currentTime = time;
+      }
     },
     [videoRef],
   );
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video && onLoadedData) {
+      video.onloadeddata = onLoadedData;
+    }
+  }, [onLoadedData, videoRef]);
 
   return {
     videoRef,
