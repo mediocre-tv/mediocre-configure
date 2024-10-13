@@ -89,11 +89,13 @@ export function ConfigurationProvider({
         const testsOrEmpty =
           testConfiguration.stagesTests.find((test) => test.stageId === id)
             ?.tests ?? [];
-        const tests = testsOrEmpty.map(({ start, end, timestamps }) => ({
-          start,
-          end,
-          times: timestamps,
-        }));
+        const tests = testsOrEmpty
+          .map(({ start, end, timestamps }) => ({
+            start,
+            end,
+            times: timestamps.sort((a, b) => a - b),
+          }))
+          .sort((a, b) => a.start - b.start);
         return [id, { id, name, zoneIds, tests }];
       },
     ),
@@ -114,11 +116,13 @@ export function ConfigurationProvider({
       ...testConfiguration,
       stagesTests: Array.from(stages).map(([id, { tests }]) => ({
         stageId: id,
-        tests: tests.map((test) => ({
-          start: test.start,
-          end: test.end,
-          timestamps: test.times,
-        })),
+        tests: tests
+          .sort((a, b) => a.start - b.start)
+          .map((test) => ({
+            start: test.start,
+            end: test.end,
+            timestamps: test.times.sort((a, b) => a - b),
+          })),
       })),
     });
   };
@@ -137,10 +141,12 @@ export function ConfigurationProvider({
         const testsOrEmpty =
           testConfiguration.zonesTests.find((test) => test.zoneId === id)
             ?.tests ?? [];
-        const tests = testsOrEmpty.map(({ timestamp, visible }) => ({
-          time: timestamp,
-          visible,
-        }));
+        const tests = testsOrEmpty
+          .map(({ timestamp, visible }) => ({
+            time: timestamp,
+            visible,
+          }))
+          .sort((a, b) => a.time - b.time);
         return [
           id,
           {
@@ -180,10 +186,12 @@ export function ConfigurationProvider({
       ...testConfiguration,
       zonesTests: Array.from(zones).map(([id, { tests }]) => ({
         zoneId: id,
-        tests: tests.map((test) => ({
-          timestamp: test.time,
-          visible: test.visible,
-        })),
+        tests: tests
+          .sort((a, b) => a.time - b.time)
+          .map((test) => ({
+            timestamp: test.time,
+            visible: test.visible,
+          })),
       })),
     });
   };
@@ -205,7 +213,8 @@ export function ConfigurationProvider({
             ?.tests ?? [];
         const tests = testsOrEmpty
           .filter(isCharactersTest)
-          .map(mapToRegionTest);
+          .map(mapToRegionTest)
+          .sort((a, b) => a.time - b.time);
         return [
           id,
           { id, name, zonePaths, transforms: transformations, tests },
@@ -237,15 +246,17 @@ export function ConfigurationProvider({
       ...testConfiguration,
       regionsTests: Array.from(regions).map(([id, { tests }]) => ({
         regionId: id,
-        tests: tests.map((test) => ({
-          timestamp: test.time,
-          value: {
+        tests: tests
+          .sort((a, b) => a.time - b.time)
+          .map((test) => ({
+            timestamp: test.time,
             value: {
-              oneofKind: "characters",
-              characters: test.value,
+              value: {
+                oneofKind: "characters",
+                characters: test.value,
+              },
             },
-          },
-        })),
+          })),
       })),
     });
   };
