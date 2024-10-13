@@ -13,6 +13,7 @@ import { VideoWithHiddenCanvas } from "../frame-selector/VideoWithHiddenCanvas.t
 import { ZoneEditorViewToggles, ZonesEditorView } from "./ZonesEditor.tsx";
 import { useFrame } from "../providers/frame/useFrame.ts";
 import { useZone } from "../providers/zone/useZone.ts";
+import { getPrettyTime } from "../../utilities/timestamp.ts";
 
 export interface ZonesEditorAllFramesProps {
   setZoneView: (view: ZonesEditorView) => void;
@@ -160,12 +161,31 @@ function ZoneListViewer({ timestamp, setSelectedZoneId }: ZoneListViewerProps) {
   );
 }
 
-interface ZoneFrameViewerParams {
+interface ZoneFrameTimeViewerProps {
   timestamp: number;
   onClick: () => void;
 }
 
-function ZoneFrameViewer({ timestamp, onClick }: ZoneFrameViewerParams) {
+function ZoneFrameTimeViewer({ timestamp, onClick }: ZoneFrameTimeViewerProps) {
+  const { transformResults } = useZoneResults(timestamp);
+
+  return (
+    <Box>
+      <TransformResultViewer
+        label={getPrettyTime(timestamp)}
+        results={transformResults}
+        onClick={onClick}
+      />
+    </Box>
+  );
+}
+
+interface ZoneFrameViewerProps {
+  timestamp: number;
+  onClick: () => void;
+}
+
+function ZoneFrameViewer({ timestamp, onClick }: ZoneFrameViewerProps) {
   const { zone } = useZone();
   const { transformResults } = useZoneResults(timestamp);
 
@@ -204,7 +224,7 @@ function ZonesEditorAllFramesRight({
       {selectedZoneId &&
         timestamps.map((timestamp) => (
           <ZoneProvider key={timestamp} id={selectedZoneId}>
-            <ZoneFrameViewer
+            <ZoneFrameTimeViewer
               timestamp={timestamp}
               onClick={() => setSelectedTimestamp(timestamp)}
             />
