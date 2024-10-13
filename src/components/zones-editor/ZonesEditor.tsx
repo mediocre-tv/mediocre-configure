@@ -6,27 +6,9 @@ import { useStage } from "../providers/stage/useStage.ts";
 import { useZones } from "../providers/zone/useZones.ts";
 
 const zonesEditorViews = ["Single Frame", "All Frames"] as const;
-type ZonesEditorView = (typeof zonesEditorViews)[number];
+export type ZonesEditorView = (typeof zonesEditorViews)[number];
 
 export function ZonesEditor() {
-  const [zoneView, setZoneView] = useState<ZonesEditorView>("Single Frame");
-
-  const changeViewToggles = (
-    <Box width={1} display={"flex"} justifyContent={"center"}>
-      <ToggleButtonGroup
-        exclusive
-        value={zoneView}
-        onChange={(_, value) => setZoneView(value)}
-      >
-        {zonesEditorViews.map((view) => (
-          <ToggleButton key={view} value={view} sx={{ textTransform: "none" }}>
-            {view}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
-    </Box>
-  );
-
   const { stage } = useStage();
   const { zones } = useZones();
 
@@ -42,19 +24,47 @@ export function ZonesEditor() {
     timestamps[0],
   );
 
+  const [zoneView, setZoneView] = useState<ZonesEditorView>("Single Frame");
+
   return zoneView === "Single Frame" ? (
     <ZonesEditorSingleFrame
-      changeViewToggles={changeViewToggles}
+      setZoneView={setZoneView}
       timestamps={timestamps}
       selectedTimestamp={selectedTimestamp}
       setSelectedTimestamp={setSelectedTimestamp}
     />
   ) : (
     <ZonesEditorAllFrames
-      changeViewToggles={changeViewToggles}
+      setZoneView={setZoneView}
       timestamps={timestamps}
       selectedTimestamp={selectedTimestamp}
       setSelectedTimestamp={setSelectedTimestamp}
     />
+  );
+}
+
+interface ZoneEditorViewTogglesProps {
+  zoneView: ZonesEditorView;
+  setZoneView: (view: ZonesEditorView) => void;
+}
+
+export function ZoneEditorViewToggles({
+  zoneView,
+  setZoneView,
+}: ZoneEditorViewTogglesProps) {
+  return (
+    <Box width={1} display={"flex"} justifyContent={"center"}>
+      <ToggleButtonGroup
+        exclusive
+        value={zoneView}
+        onChange={(_, value) => setZoneView(value)}
+      >
+        {zonesEditorViews.map((view) => (
+          <ToggleButton key={view} value={view} sx={{ textTransform: "none" }}>
+            {view}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+    </Box>
   );
 }

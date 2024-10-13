@@ -1,5 +1,5 @@
 import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, IconButton, Stack, useMediaQuery, useTheme } from "@mui/material";
 import { useZones } from "../providers/zone/useZones.ts";
 import { ZoneProvider } from "../providers/zone/ZoneProvider.tsx";
@@ -10,16 +10,17 @@ import { AddAPhoto } from "@mui/icons-material";
 import { useVideoFrame } from "../frame-selector/useVideoFrame.ts";
 import { usePrevious } from "react-use";
 import { VideoWithHiddenCanvas } from "../frame-selector/VideoWithHiddenCanvas.tsx";
+import { ZoneEditorViewToggles, ZonesEditorView } from "./ZonesEditor.tsx";
 
 export interface ZonesEditorAllFramesProps {
-  changeViewToggles: ReactNode;
+  setZoneView: (view: ZonesEditorView) => void;
   timestamps: number[];
   selectedTimestamp: number;
   setSelectedTimestamp: (time: number) => void;
 }
 
 export function ZonesEditorAllFrames({
-  changeViewToggles,
+  setZoneView,
   timestamps,
   selectedTimestamp,
   setSelectedTimestamp,
@@ -33,7 +34,7 @@ export function ZonesEditorAllFrames({
     <LongOrSideBySideLayout
       leftChild={
         <ZonesEditorAllFramesLeft
-          changeViewToggles={changeViewToggles}
+          setZoneView={setZoneView}
           selectedTimestamp={selectedTimestamp}
           setSelectedZoneId={setSelectedZoneId}
         />
@@ -50,13 +51,13 @@ export function ZonesEditorAllFrames({
 }
 
 interface ZonesEditorAllFramesLeftProps {
-  changeViewToggles: ReactNode;
+  setZoneView: (view: ZonesEditorView) => void;
   selectedTimestamp: number;
   setSelectedZoneId: (zoneId: string) => void;
 }
 
 function ZonesEditorAllFramesLeft({
-  changeViewToggles,
+  setZoneView,
   selectedTimestamp,
   setSelectedZoneId,
 }: ZonesEditorAllFramesLeftProps) {
@@ -93,7 +94,10 @@ function ZonesEditorAllFramesLeft({
         videoUrl={configuration.videoUrl}
       />
       <Stack direction={"row"} sx={{ position: "relative" }}>
-        {changeViewToggles}
+        <ZoneEditorViewToggles
+          zoneView={"All Frames"}
+          setZoneView={setZoneView}
+        />
         <Stack
           direction={"row"}
           spacing={1}

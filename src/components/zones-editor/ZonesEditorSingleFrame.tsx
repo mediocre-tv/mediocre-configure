@@ -8,7 +8,6 @@ import { isImageToImageTransform } from "../transform/Transform.ts";
 import { Rectangles } from "../shapes/Rectangle.tsx";
 import { Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
-import { ReactNode } from "react";
 import { BoxWithHeaderActions } from "../layout/BoxWithHeaderLayout.tsx";
 import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
 import {
@@ -23,16 +22,17 @@ import { ZoneProvider } from "../providers/zone/ZoneProvider.tsx";
 import { useZoneResults } from "../providers/zone/useZoneResults.ts";
 import { useZone } from "../providers/zone/useZone.ts";
 import { TransformResultViewer } from "./TransformResultViewer.tsx";
+import { ZoneEditorViewToggles, ZonesEditorView } from "./ZonesEditor.tsx";
 
 export interface ZonesEditorSingleFrameProps {
-  changeViewToggles: ReactNode;
+  setZoneView: (view: ZonesEditorView) => void;
   timestamps: number[];
   selectedTimestamp: number;
   setSelectedTimestamp: (time: number) => void;
 }
 
 export function ZonesEditorSingleFrame({
-  changeViewToggles,
+  setZoneView,
   timestamps,
   selectedTimestamp,
   setSelectedTimestamp,
@@ -44,7 +44,7 @@ export function ZonesEditorSingleFrame({
           timestamps={timestamps}
           selectedTimestamp={selectedTimestamp}
           setSelectedTimestamp={setSelectedTimestamp}
-          changeViewToggles={changeViewToggles}
+          setZoneView={setZoneView}
         />
       }
       rightChild={<ZonesEditorSingleFrameRight timestamp={selectedTimestamp} />}
@@ -167,14 +167,14 @@ interface ZoneEditorLeftProps {
   timestamps: number[];
   selectedTimestamp: number;
   setSelectedTimestamp: (time: number) => void;
-  changeViewToggles: ReactNode;
+  setZoneView: (view: ZonesEditorView) => void;
 }
 
 function ZonesEditorSingleFrameLeft({
   timestamps,
   selectedTimestamp,
   setSelectedTimestamp,
-  changeViewToggles,
+  setZoneView,
 }: ZoneEditorLeftProps) {
   const frame = useFrame(selectedTimestamp);
   const { stage } = useStage();
@@ -199,7 +199,10 @@ function ZonesEditorSingleFrameLeft({
         rectangles={rectangles}
         setRectangles={setRectangles}
       />
-      {changeViewToggles}
+      <ZoneEditorViewToggles
+        zoneView={"Single Frame"}
+        setZoneView={setZoneView}
+      />
       <ZonesFramesViewer
         timestamps={timestamps}
         selectedTimestamp={selectedTimestamp}
