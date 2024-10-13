@@ -116,6 +116,7 @@ function ZonesFramesViewer({
   return (
     <Stack
       direction={"row"}
+      padding={2}
       sx={{
         ...(hasLgBreakpoint
           ? {
