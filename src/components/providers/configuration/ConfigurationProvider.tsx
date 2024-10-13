@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useState } from "react";
+import { PropsWithChildren } from "react";
 import {
   BaseConfiguration,
   ConfigurationContext,
@@ -18,7 +18,6 @@ import {
   RegionTest,
   TestConfiguration,
 } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/test_pb";
-import VideoDialog from "./VideoDialog.tsx";
 
 export interface ConfigurationProviderProps {
   gameConfiguration: GameConfiguration;
@@ -34,36 +33,8 @@ export function ConfigurationProvider({
   testConfiguration,
   setTestConfiguration,
 }: PropsWithChildren<ConfigurationProviderProps>) {
-  const [error, setError] = useState<string | null>("Loading");
-
-  const onSelectVideo = (name: string, video: string) => {
-    if (!testConfiguration.video || testConfiguration.video.name === name) {
-      setTestConfiguration({
-        ...testConfiguration,
-        video: { name, url: video },
-      });
-    } else {
-      setError("Name of video must match the name of the video in the test");
-    }
-  };
-
-  useEffect(() => {
-    if (testConfiguration?.video) {
-      fetch(testConfiguration?.video.url)
-        .then(() => setError(null))
-        .catch((error) => setError(error.message ?? "Unknown error"));
-    }
-  }, [testConfiguration?.video]);
-
-  if (!testConfiguration.video || error) {
-    return (
-      <VideoDialog
-        open={true}
-        error={error}
-        video={testConfiguration.video}
-        onSelectVideo={onSelectVideo}
-      />
-    );
+  if (!testConfiguration.video) {
+    throw new Error("Video should have been provided");
   }
 
   const configuration: BaseConfiguration = {

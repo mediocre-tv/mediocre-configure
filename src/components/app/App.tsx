@@ -6,12 +6,17 @@ import useLocalState from "../../hooks/UseLocalState.tsx";
 import { GameConfiguration } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/game_pb";
 import { v4 as uuid } from "uuid";
 import { StagesEditor } from "../stages-editor/StagesEditor.tsx";
-import { TestConfiguration } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/test_pb";
+import {
+  TestConfiguration,
+  Video,
+} from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/test_pb";
 import AppProviders from "../providers/app/AppProviders.tsx";
 import GrpcProviderWithDialog from "../providers/grpc/GrpcProviderWithDialog.tsx";
 import { ConfigurationProvider } from "../providers/configuration/ConfigurationProvider.tsx";
 import { FrameProvider } from "../providers/frame/FrameProvider.tsx";
 import { TransformResultsProvider } from "../providers/transform-results/TransformResultsProvider.tsx";
+import { VideoProvider } from "../providers/video/VideoProvider.tsx";
+import { getRandomTimestamps } from "../video/GrabFrames.ts";
 
 function getDefaultGameConfiguration(): GameConfiguration {
   return {
@@ -36,18 +41,7 @@ function getDefaultTestConfiguration(
     id: uuid(),
     configurationId: configuration.id,
     video: undefined,
-    stagesTests: [
-      {
-        stageId: configuration.stages[0].id,
-        tests: [
-          {
-            start: 0,
-            end: 340,
-            timestamps: [1, 10, 50, 100, 150, 200, 250, 300, 320, 339],
-          },
-        ],
-      },
-    ],
+    stagesTests: [],
     zonesTests: [],
     regionsTests: [],
   };
@@ -68,21 +62,47 @@ function App() {
   return (
     <AppProviders>
       <GrpcProviderWithDialog>
-        <ConfigurationProvider
-          gameConfiguration={gameConfiguration}
-          setGameConfiguration={setGameConfiguration}
-          testConfiguration={testConfiguration}
-          setTestConfiguration={setTestConfiguration}
-        >
-          <FrameProvider>
-            <TransformResultsProvider>
-              <StagesEditor />
-            </TransformResultsProvider>
-          </FrameProvider>
-        </ConfigurationProvider>
+        <VideoProvider video={testConfiguration.video} setVideo={setVideo}>
+          <ConfigurationProvider
+            gameConfiguration={gameConfiguration}
+            setGameConfiguration={setGameConfiguration}
+            testConfiguration={testConfiguration}
+            setTestConfiguration={setTestConfiguration}
+          >
+            <FrameProvider>
+              <TransformResultsProvider>
+                <StagesEditor />
+              </TransformResultsProvider>
+            </FrameProvider>
+          </ConfigurationProvider>
+        </VideoProvider>
       </GrpcProviderWithDialog>
     </AppProviders>
   );
+
+  function setVideo(video: Video, duration: number) {
+    const stagesTests =
+      testConfiguration.stagesTests.length > 0
+        ? testConfiguration.stagesTests
+        : [
+            {
+              stageId: gameConfiguration.stages[0].id,
+              tests: [
+                {
+                  start: 0,
+                  end: duration,
+                  timestamps: getRandomTimestamps(0, duration, 10),
+                },
+              ],
+            },
+          ];
+
+    return setTestConfiguration({
+      ...testConfiguration,
+      video: video,
+      stagesTests: stagesTests,
+    });
+  }
 }
 
 export default App;

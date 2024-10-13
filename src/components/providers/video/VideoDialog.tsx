@@ -34,7 +34,7 @@ export default function VideoDialog({
         <Stack spacing={2}>
           <DragDropVideo onDropVideo={onSelectVideo} helpText={video?.name} />
           {error && <Alert severity={"error"}>{error}</Alert>}
-          {error && video?.url.startsWith("blob:") && (
+          {!error && video?.url.startsWith("blob:") && (
             <Alert severity={"info"}>
               Local videos cannot be loaded without being re-dropped.
             </Alert>
