@@ -1,12 +1,15 @@
 import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
-import { ReactNode, useState } from "react";
-import { FrameSelector } from "../frame-selector/FrameSelector.tsx";
-import { Stack, useMediaQuery, useTheme } from "@mui/material";
+import { ReactNode, useEffect, useState } from "react";
+import { Box, IconButton, Stack, useMediaQuery, useTheme } from "@mui/material";
 import { useZones } from "../providers/zone/useZones.ts";
 import { ZoneProvider } from "../providers/zone/ZoneProvider.tsx";
 import { useZoneResults } from "../providers/zone/useZoneResults.ts";
 import { useConfiguration } from "../providers/configuration/useConfiguration.ts";
 import { TransformResultViewer } from "./TransformResultViewer.tsx";
+import { AddAPhoto } from "@mui/icons-material";
+import { useVideoFrame } from "../frame-selector/useVideoFrame.ts";
+import { usePrevious } from "react-use";
+import { VideoWithHiddenCanvas } from "../frame-selector/VideoWithHiddenCanvas.tsx";
 
 export interface ZonesEditorAllFramesProps {
   changeViewToggles: ReactNode;
@@ -32,7 +35,6 @@ export function ZonesEditorAllFrames({
         <ZonesEditorAllFramesLeft
           changeViewToggles={changeViewToggles}
           selectedTimestamp={selectedTimestamp}
-          selectedZoneId={selectedZoneId}
           setSelectedZoneId={setSelectedZoneId}
         />
       }
@@ -50,28 +52,60 @@ export function ZonesEditorAllFrames({
 interface ZonesEditorAllFramesLeftProps {
   changeViewToggles: ReactNode;
   selectedTimestamp: number;
-  selectedZoneId: string | null;
   setSelectedZoneId: (zoneId: string) => void;
 }
 
 function ZonesEditorAllFramesLeft({
   changeViewToggles,
   selectedTimestamp,
-  selectedZoneId,
   setSelectedZoneId,
 }: ZonesEditorAllFramesLeftProps) {
   const { configuration } = useConfiguration();
+  const { zones, setZones } = useZones();
+  const { videoRef, canvasRef, getTimestamp, seek } = useVideoFrame();
+
+  const previousSelectedTime = usePrevious(selectedTimestamp);
+  useEffect(() => {
+    if (selectedTimestamp && selectedTimestamp !== previousSelectedTime) {
+      seek(selectedTimestamp);
+    }
+  }, [previousSelectedTime, seek, selectedTimestamp]);
+
+  const onAddScreenshot = () => {
+    const time = getTimestamp();
+
+    zones.forEach((zone) => {
+      if (!zone.tests.find((test) => test.time === time)) {
+        zone.tests.push({
+          time: time,
+          visible: true,
+        });
+      }
+    });
+    setZones(zones);
+  };
 
   return (
     <Stack spacing={5}>
-      <FrameSelector
+      <VideoWithHiddenCanvas
+        videoRef={videoRef}
+        canvasRef={canvasRef}
         videoUrl={configuration.videoUrl}
-        selectedTime={selectedTimestamp}
       />
-      {changeViewToggles}
+      <Stack direction={"row"} sx={{ position: "relative" }}>
+        {changeViewToggles}
+        <Stack
+          direction={"row"}
+          spacing={1}
+          sx={{ position: "absolute", right: 0 }}
+        >
+          <IconButton onClick={onAddScreenshot}>
+            <AddAPhoto></AddAPhoto>
+          </IconButton>
+        </Stack>
+      </Stack>
       <ZoneListViewer
         timestamp={selectedTimestamp}
-        selectedZoneId={selectedZoneId}
         setSelectedZoneId={setSelectedZoneId}
       />
     </Stack>
@@ -80,15 +114,10 @@ function ZonesEditorAllFramesLeft({
 
 interface ZoneListViewerProps {
   timestamp: number;
-  selectedZoneId: string | null;
   setSelectedZoneId: (id: string) => void;
 }
 
-function ZoneListViewer({
-  timestamp,
-  selectedZoneId,
-  setSelectedZoneId,
-}: ZoneListViewerProps) {
+function ZoneListViewer({ timestamp, setSelectedZoneId }: ZoneListViewerProps) {
   const theme = useTheme();
   const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
   const { zones } = useZones();
@@ -127,11 +156,13 @@ function ZoneFrameViewer({ timestamp, onClick }: ZoneFrameViewerParams) {
   const { transformResults } = useZoneResults(timestamp);
 
   return (
-    <TransformResultViewer
-      timestamp={timestamp}
-      results={transformResults}
-      onClick={onClick}
-    />
+    <Box>
+      <TransformResultViewer
+        timestamp={timestamp}
+        results={transformResults}
+        onClick={onClick}
+      />
+    </Box>
   );
 }
 
