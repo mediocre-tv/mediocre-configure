@@ -1,12 +1,12 @@
 import {
   Transform,
   TransformImageToImage,
+  TransformRequest,
   TransformResponse,
 } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
 import { Rectangle } from "../shapes/Rectangle";
 import { isRpcError } from "../providers/grpc/GrpcHealth.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
-import { TransformRequest } from "../../../../mediocre-service/@buf/typescript/mediocre/transform/v1beta/transform_pb";
 import { TransformResultOrError } from "../providers/transform-results/TransformResults.ts";
 
 export function crop(rectangle: Rectangle): Transform {
