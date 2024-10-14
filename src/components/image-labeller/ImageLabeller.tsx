@@ -3,7 +3,8 @@ import useImage from "use-image";
 import useImageContainer from "./UseImageContainer.ts";
 import { Dimensions } from "../shapes/Dimensions.ts";
 import ImageLabellerWindow from "./ImageLabellerWindow.tsx";
-import { Alert, Box, CircularProgress } from "@mui/material";
+import { Alert, Box } from "@mui/material";
+import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
 
 function getScaledRectangle(rectangle: Rectangle, scale: number) {
   return {
@@ -29,8 +30,7 @@ interface ScaledImageLabellerWindowProps {
   scale: number;
   rectangles: Rectangles;
   setRectangles: (rectangles: Rectangles) => void;
-  selectedRectangleId: string | null;
-  setSelectedRectangleId: (id: string | null) => void;
+  onSelectRectangle: (id: string | null) => void;
 }
 
 function ScaledImageLabellerWindow({
@@ -39,8 +39,7 @@ function ScaledImageLabellerWindow({
   scale,
   rectangles,
   setRectangles,
-  selectedRectangleId,
-  setSelectedRectangleId,
+  onSelectRectangle,
 }: ScaledImageLabellerWindowProps) {
   const scaledRectangles = getScaledRectangles(rectangles, scale);
   const setScaledRectangles = (scaledRectangles: Rectangles) => {
@@ -57,8 +56,7 @@ function ScaledImageLabellerWindow({
       dimensions={dimensions}
       rectangles={scaledRectangles}
       setRectangles={setScaledRectangles}
-      selectedRectangleId={selectedRectangleId}
-      setSelectedRectangleId={setSelectedRectangleId}
+      onSelectRectangle={onSelectRectangle}
     />
   );
 }
@@ -67,22 +65,27 @@ interface ScaledImageLabellerWindowContainerProps {
   image: HTMLImageElement;
   rectangles: Rectangles;
   setRectangles: (rectangles: Rectangles) => void;
-  selectedRectangleId: string | null;
-  setSelectedRectangleId: (id: string | null) => void;
+  onSelectRectangle: (id: string | null) => void;
 }
 
 function ScaledImageLabellerWindowContainer({
   image,
   rectangles,
   setRectangles,
-  selectedRectangleId,
-  setSelectedRectangleId,
+  onSelectRectangle,
 }: ScaledImageLabellerWindowContainerProps) {
   const { ref, dimensions, scale: scale } = useImageContainer(image);
 
   return (
     // always render the stage container, otherwise we can't dynamically resize the image
-    <Box width={1} ref={ref}>
+    <Box
+      width={1}
+      height={1}
+      ref={ref}
+      display={"flex"}
+      justifyContent={"center"}
+      alignItems={"center"}
+    >
       {dimensions && scale && (
         <ScaledImageLabellerWindow
           image={image}
@@ -90,52 +93,70 @@ function ScaledImageLabellerWindowContainer({
           scale={scale}
           rectangles={rectangles}
           setRectangles={setRectangles}
-          selectedRectangleId={selectedRectangleId}
-          setSelectedRectangleId={setSelectedRectangleId}
+          onSelectRectangle={onSelectRectangle}
         />
       )}
     </Box>
   );
 }
 
-interface ImageLabellerProps {
+interface CanvasImageLabellerProps extends ImageLabellerProps {
   image: string;
-  rectangles: Rectangles;
-  setRectangles: (rectangles: Rectangles) => void;
-  selectedRectangleId: string | null;
-  setSelectedRectangleId: (id: string | null) => void;
 }
 
-export default function ImageLabeller({
+function CanvasImageLabeller({
   image,
   rectangles,
   setRectangles,
-  selectedRectangleId,
-  setSelectedRectangleId,
-}: ImageLabellerProps) {
+  onSelectRectangle,
+}: CanvasImageLabellerProps) {
   const [canvasImage, canvasImageStatus] = useImage(image);
 
   return (
-    <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      border="solid"
-      borderRadius={1}
+    <SkeletonBox
+      showSkeleton={
+        canvasImage === undefined || canvasImageStatus === "loading"
+      }
     >
       {canvasImage ? (
         <ScaledImageLabellerWindowContainer
           image={canvasImage}
           rectangles={rectangles}
           setRectangles={setRectangles}
-          selectedRectangleId={selectedRectangleId}
-          setSelectedRectangleId={setSelectedRectangleId}
+          onSelectRectangle={onSelectRectangle ? onSelectRectangle : () => {}}
         />
-      ) : canvasImageStatus ? (
-        <CircularProgress></CircularProgress>
       ) : (
         <Alert severity="error">Failed to load image</Alert>
       )}
+    </SkeletonBox>
+  );
+}
+
+interface ImageLabellerProps {
+  image: string | null;
+  rectangles: Rectangles;
+  setRectangles: (rectangles: Rectangles) => void;
+  onSelectRectangle?: (id: string | null) => void;
+}
+
+export default function ImageLabeller({
+  image,
+  rectangles,
+  setRectangles,
+  onSelectRectangle,
+}: ImageLabellerProps) {
+  return (
+    <Box width={1} sx={{ aspectRatio: "16/9" }}>
+      <SkeletonBox showSkeleton={!image}>
+        {image && (
+          <CanvasImageLabeller
+            image={image}
+            rectangles={rectangles}
+            setRectangles={setRectangles}
+            onSelectRectangle={onSelectRectangle ? onSelectRectangle : () => {}}
+          />
+        )}
+      </SkeletonBox>
     </Box>
   );
 }

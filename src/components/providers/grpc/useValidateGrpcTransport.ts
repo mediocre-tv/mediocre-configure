@@ -1,21 +1,21 @@
-import { GrpcContextProps } from "./GrpcContext.ts";
 import { useEffect, useState } from "react";
 import { checkHealth } from "./GrpcHealth.ts";
+import { GrpcTransportParts } from "./GrpcProviderWithDialog.tsx";
 
-export default function useValidateGrpcContext(context: GrpcContextProps) {
+export default function useValidateGrpcTransport(parts: GrpcTransportParts) {
   const [valid, setValid] = useState<boolean | null>(null);
   const validating = valid === null;
 
   useEffect(() => {
     if (validating) {
-      validate(context);
+      validate(parts);
     }
 
-    async function validate(context: GrpcContextProps) {
-      const { isValid } = await checkHealth(context);
+    async function validate(parts: GrpcTransportParts) {
+      const { isValid } = await checkHealth(parts);
       setValid(isValid);
     }
-  }, [context, validating]);
+  }, [parts, validating]);
 
   return { validating, valid };
 }

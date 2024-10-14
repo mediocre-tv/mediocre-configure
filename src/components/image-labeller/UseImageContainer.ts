@@ -9,7 +9,8 @@ interface useImageContainerReturns {
 }
 
 function useImageContainer(image: HTMLImageElement): useImageContainerReturns {
-  const [ref, { width: containerWidth }] = useMeasure<HTMLDivElement>();
+  const [ref, { width: containerWidth, height: containerHeight }] =
+    useMeasure<HTMLDivElement>();
 
   if (containerWidth === 0) {
     return {
@@ -19,11 +20,20 @@ function useImageContainer(image: HTMLImageElement): useImageContainerReturns {
     };
   }
 
-  const ratio = image.naturalWidth / image.naturalHeight;
-  const width = containerWidth;
-  const height = containerWidth / ratio;
+  let width, height, scale: number;
+  if (image.naturalWidth >= image.naturalHeight) {
+    const ratio = image.naturalWidth / image.naturalHeight;
+    width = containerWidth;
+    height = containerWidth / ratio;
+    scale = width / image.naturalWidth;
+  } else {
+    const ratio = image.naturalHeight / image.naturalWidth;
+    height = containerHeight;
+    width = containerHeight / ratio;
+    scale = height / image.naturalHeight;
+  }
+
   const dimensions = { width, height };
-  const scale = width / image.naturalWidth;
 
   return {
     ref,
