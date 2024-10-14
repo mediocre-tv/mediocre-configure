@@ -16,7 +16,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@buf/broomy_mediocre.community_timostamm-protobuf-ts": "^2.9.4-00000000000000-a622f08bb2a1.4",
+    "@buf/broomy_mediocre.community_timostamm-protobuf-ts": "^2.9.4-20241014163114-4128c08c189e.4",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@fontsource/roboto": "^5.1.0",
