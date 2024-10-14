@@ -61,7 +61,7 @@ export function ZonesEditorSingleFrame({
   );
 }
 
-export function getZoneTransforms(zone: ZoneConfiguration): Transforms {
+function getZoneTransforms(zone: ZoneConfiguration): Transforms {
   return {
     id: zone.id,
     transformations: zone.transforms.map((transformation) => ({

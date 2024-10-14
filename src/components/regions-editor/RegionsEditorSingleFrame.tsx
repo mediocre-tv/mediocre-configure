@@ -66,7 +66,7 @@ export function RegionsEditorSingleFrame({
   );
 }
 
-export function getRegionTransforms(region: RegionConfiguration): Transforms {
+function getRegionTransforms(region: RegionConfiguration): Transforms {
   return {
     id: region.id,
     transformations: region.transforms,

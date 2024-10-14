@@ -15,7 +15,7 @@ interface InputBaseProps<T> {
   setValue: (value: T) => void;
 }
 
-interface IntInputProps extends InputBaseProps<number> {}
+type IntInputProps = InputBaseProps<number>;
 
 export function IntInput({ setValue, ...otherProps }: IntInputProps) {
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +75,7 @@ export function SliderInput({
   );
 }
 
-interface FloatInputProps extends InputBaseProps<number> {}
+type FloatInputProps = InputBaseProps<number>;
 
 export function FloatInput({ setValue, ...otherProps }: FloatInputProps) {
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +95,7 @@ export function FloatInput({ setValue, ...otherProps }: FloatInputProps) {
   );
 }
 
-interface BigIntInputProps extends InputBaseProps<bigint> {}
+type BigIntInputProps = InputBaseProps<bigint>;
 
 export function BigIntInput({ setValue, ...otherProps }: BigIntInputProps) {
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -113,7 +113,7 @@ export function BigIntInput({ setValue, ...otherProps }: BigIntInputProps) {
   );
 }
 
-interface BooleanInputProps extends InputBaseProps<boolean> {}
+type BooleanInputProps = InputBaseProps<boolean>;
 
 export function BooleanInput({ setValue, ...otherProps }: BooleanInputProps) {
   const onChange = (event: ChangeEvent<HTMLInputElement>) =>
@@ -122,7 +122,7 @@ export function BooleanInput({ setValue, ...otherProps }: BooleanInputProps) {
   return <Switch {...otherProps} onChange={onChange} />;
 }
 
-interface StringInputProps extends InputBaseProps<string> {}
+type StringInputProps = InputBaseProps<string>;
 
 export function StringInput({ setValue, ...otherProps }: StringInputProps) {
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
