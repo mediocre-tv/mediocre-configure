@@ -26,7 +26,7 @@ export function TransformResult({ result }: TransformResultProps) {
       {result &&
         ("error" in result ? (
           <Alert
-            sx={{ height: "100%", width: "100%" }}
+            sx={{ maxHeight: "100%", maxWidth: "100%" }}
             severity={"error"}
             icon={false}
           >
