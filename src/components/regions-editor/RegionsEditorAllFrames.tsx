@@ -1,71 +1,74 @@
 import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
 import { useEffect, useState } from "react";
 import { Box, IconButton, Stack, useMediaQuery, useTheme } from "@mui/material";
-import { ZoneProvider } from "../providers/zone/ZoneProvider.tsx";
-import { useZoneResults } from "../providers/zone/useZoneResults.ts";
+import { RegionProvider } from "../providers/region/RegionProvider.tsx";
+import { useRegionResults } from "../providers/region/useRegionResults.ts";
 import { useConfiguration } from "../providers/configuration/useConfiguration.ts";
 import { TransformResultViewer } from "../transform/TransformResultViewer.tsx";
 import { AddAPhoto } from "@mui/icons-material";
 import { useVideoFrame } from "../frame-selector/useVideoFrame.ts";
 import { usePrevious } from "react-use";
 import { VideoWithHiddenCanvas } from "../frame-selector/VideoWithHiddenCanvas.tsx";
-import { ZoneEditorViewToggles, ZonesEditorView } from "./ZonesEditor.tsx";
+import {
+  RegionEditorViewToggles,
+  RegionsEditorView,
+} from "./RegionsEditor.tsx";
 import { useFrame } from "../providers/frame/useFrame.ts";
-import { useZone } from "../providers/zone/useZone.ts";
+import { useRegion } from "../providers/region/useRegion.ts";
 import { getPrettyTime } from "../../utilities/timestamp.ts";
-import { useStageZones } from "../providers/zone/useStageZones.ts";
+import { useZoneRegions } from "../providers/region/useZoneRegions.ts";
 
-export interface ZonesEditorAllFramesProps {
-  setZoneView: (view: ZonesEditorView) => void;
+export interface RegionsEditorAllFramesProps {
+  setRegionView: (view: RegionsEditorView) => void;
   timestamps: number[];
   selectedTimestamp: number;
   setSelectedTimestamp: (time: number) => void;
 }
 
-export function ZonesEditorAllFrames({
-  setZoneView,
+export function RegionsEditorAllFrames({
+  setRegionView,
   timestamps,
   selectedTimestamp,
   setSelectedTimestamp,
-}: ZonesEditorAllFramesProps) {
-  const { zones } = useStageZones();
-  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(
-    zones.keys().next()?.value ?? null,
+}: RegionsEditorAllFramesProps) {
+  const { regions } = useZoneRegions();
+  const [selectedRegionId, setSelectedRegionId] = useState<string | null>(
+    regions.keys().next()?.value ?? null,
   );
 
   return (
     <LongOrSideBySideLayout
       leftChild={
-        <ZonesEditorAllFramesLeft
-          setZoneView={setZoneView}
+        <RegionsEditorAllFramesLeft
+          setRegionView={setRegionView}
           selectedTimestamp={selectedTimestamp}
-          setSelectedZoneId={setSelectedZoneId}
+          setSelectedRegionId={setSelectedRegionId}
         />
       }
       rightChild={
-        <ZonesEditorAllFramesRight
+        <RegionsEditorAllFramesRight
           timestamps={timestamps}
           setSelectedTimestamp={setSelectedTimestamp}
-          selectedZoneId={selectedZoneId}
+          selectedRegionId={selectedRegionId}
         />
       }
     />
   );
 }
 
-interface ZonesEditorAllFramesLeftProps {
-  setZoneView: (view: ZonesEditorView) => void;
+interface RegionsEditorAllFramesLeftProps {
+  setRegionView: (view: RegionsEditorView) => void;
   selectedTimestamp: number;
-  setSelectedZoneId: (zoneId: string) => void;
+  setSelectedRegionId: (regionId: string) => void;
 }
 
-function ZonesEditorAllFramesLeft({
-  setZoneView,
+function RegionsEditorAllFramesLeft({
+  setRegionView,
   selectedTimestamp,
-  setSelectedZoneId,
-}: ZonesEditorAllFramesLeftProps) {
+  setSelectedRegionId,
+}: RegionsEditorAllFramesLeftProps) {
   const { configuration } = useConfiguration();
-  const { zones, setZones } = useStageZones();
+  const { regions, setRegions } = useZoneRegions();
   const [videoReady, setVideoReady] = useState(false);
   const { videoRef, canvasRef, getTimestamp, seek } = useVideoFrame(() =>
     setVideoReady(true),
@@ -83,15 +86,15 @@ function ZonesEditorAllFramesLeft({
   const onAddScreenshot = () => {
     const time = getTimestamp();
 
-    zones.forEach((zone) => {
-      if (!zone.tests.find((test) => test.time === time)) {
-        zone.tests.push({
+    regions.forEach((region) => {
+      if (!region.tests.find((test) => test.time === time)) {
+        region.tests.push({
           time: time,
-          visible: true,
+          value: "",
         });
       }
     });
-    setZones(zones);
+    setRegions(regions);
   };
 
   return (
@@ -104,9 +107,9 @@ function ZonesEditorAllFramesLeft({
         fallbackImage={fallbackImage}
       />
       <Stack direction={"row"} sx={{ position: "relative" }}>
-        <ZoneEditorViewToggles
+        <RegionEditorViewToggles
           regionView={"All Frames"}
-          setRegionView={setZoneView}
+          setRegionView={setRegionView}
         />
         <Stack
           direction={"row"}
@@ -118,23 +121,26 @@ function ZonesEditorAllFramesLeft({
           </IconButton>
         </Stack>
       </Stack>
-      <ZoneListViewer
+      <RegionListViewer
         timestamp={selectedTimestamp}
-        setSelectedZoneId={setSelectedZoneId}
+        setSelectedRegionId={setSelectedRegionId}
       />
     </Stack>
   );
 }
 
-interface ZoneListViewerProps {
+interface RegionListViewerProps {
   timestamp: number;
-  setSelectedZoneId: (id: string) => void;
+  setSelectedRegionId: (id: string) => void;
 }
 
-function ZoneListViewer({ timestamp, setSelectedZoneId }: ZoneListViewerProps) {
+function RegionListViewer({
+  timestamp,
+  setSelectedRegionId,
+}: RegionListViewerProps) {
   const theme = useTheme();
   const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
-  const { zones } = useStageZones();
+  const { regions } = useZoneRegions();
 
   return (
     <Stack
@@ -149,25 +155,28 @@ function ZoneListViewer({ timestamp, setSelectedZoneId }: ZoneListViewerProps) {
             }),
       }}
     >
-      {Array.from(zones.keys()).map((id) => (
-        <ZoneProvider key={id} id={id}>
-          <ZoneFrameViewer
+      {Array.from(regions.keys()).map((id) => (
+        <RegionProvider key={id} id={id}>
+          <RegionFrameViewer
             timestamp={timestamp}
-            onClick={() => setSelectedZoneId(id)}
+            onClick={() => setSelectedRegionId(id)}
           />
-        </ZoneProvider>
+        </RegionProvider>
       ))}
     </Stack>
   );
 }
 
-interface ZoneFrameTimeViewerProps {
+interface RegionFrameTimeViewerProps {
   timestamp: number;
   onClick: () => void;
 }
 
-function ZoneFrameTimeViewer({ timestamp, onClick }: ZoneFrameTimeViewerProps) {
-  const { results } = useZoneResults(timestamp);
+function RegionFrameTimeViewer({
+  timestamp,
+  onClick,
+}: RegionFrameTimeViewerProps) {
+  const { results } = useRegionResults(timestamp);
 
   return (
     <Box>
@@ -180,19 +189,19 @@ function ZoneFrameTimeViewer({ timestamp, onClick }: ZoneFrameTimeViewerProps) {
   );
 }
 
-interface ZoneFrameViewerProps {
+interface RegionFrameViewerProps {
   timestamp: number;
   onClick: () => void;
 }
 
-function ZoneFrameViewer({ timestamp, onClick }: ZoneFrameViewerProps) {
-  const { zone } = useZone();
-  const { results } = useZoneResults(timestamp);
+function RegionFrameViewer({ timestamp, onClick }: RegionFrameViewerProps) {
+  const { region } = useRegion();
+  const { results } = useRegionResults(timestamp);
 
   return (
     <Box>
       <TransformResultViewer
-        label={zone.name}
+        label={region.name}
         results={results}
         onClick={onClick}
       />
@@ -200,17 +209,17 @@ function ZoneFrameViewer({ timestamp, onClick }: ZoneFrameViewerProps) {
   );
 }
 
-interface ZonesEditorAllFramesRightProps {
+interface RegionsEditorAllFramesRightProps {
   timestamps: number[];
   setSelectedTimestamp: (timestamp: number) => void;
-  selectedZoneId: string | null;
+  selectedRegionId: string | null;
 }
 
-function ZonesEditorAllFramesRight({
+function RegionsEditorAllFramesRight({
   timestamps,
   setSelectedTimestamp,
-  selectedZoneId,
-}: ZonesEditorAllFramesRightProps) {
+  selectedRegionId,
+}: RegionsEditorAllFramesRightProps) {
   return (
     <Stack
       direction={"row"}
@@ -221,14 +230,14 @@ function ZonesEditorAllFramesRight({
         flexWrap: "wrap",
       }}
     >
-      {selectedZoneId &&
+      {selectedRegionId &&
         timestamps.map((timestamp) => (
-          <ZoneProvider key={timestamp} id={selectedZoneId}>
-            <ZoneFrameTimeViewer
+          <RegionProvider key={timestamp} id={selectedRegionId}>
+            <RegionFrameTimeViewer
               timestamp={timestamp}
               onClick={() => setSelectedTimestamp(timestamp)}
             />
-          </ZoneProvider>
+          </RegionProvider>
         ))}
     </Stack>
   );

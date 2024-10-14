@@ -13,11 +13,11 @@ import AppProviders from "../providers/app/AppProviders.tsx";
 import GrpcProviderWithDialog from "../providers/grpc/GrpcProviderWithDialog.tsx";
 import { ConfigurationProvider } from "../providers/configuration/ConfigurationProvider.tsx";
 import { FrameProvider } from "../providers/frame/FrameProvider.tsx";
-import { TransformResultsProvider } from "../providers/transform-results/TransformResultsProvider.tsx";
 import { VideoProvider } from "../providers/video/VideoProvider.tsx";
 import { getRandomTimestamps } from "../video/GrabFrames.ts";
 import { Outlet } from "react-router-dom";
 import { AppLayout } from "./AppLayout.tsx";
+import { ResultsProviders } from "../providers/transform-results/ResultsProvider.tsx";
 
 function getDefaultGameConfiguration(): GameConfiguration {
   return {
@@ -71,11 +71,11 @@ function App() {
             setTestConfiguration={setTestConfiguration}
           >
             <FrameProvider>
-              <TransformResultsProvider>
+              <ResultsProviders>
                 <AppLayout>
                   <Outlet />
                 </AppLayout>
-              </TransformResultsProvider>
+              </ResultsProviders>
             </FrameProvider>
           </ConfigurationProvider>
         </VideoProvider>

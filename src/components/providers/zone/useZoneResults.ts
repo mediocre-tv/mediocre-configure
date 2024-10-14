@@ -1,13 +1,27 @@
 import { useStage } from "../stage/useStage.ts";
 import { useZone } from "./useZone.ts";
-import { useTransformResults } from "../transform-results/useTransformResults.ts";
-import { TransformResultsKey } from "../transform-results/TransformResultsContext.ts";
+import { useZoneResultsForKey } from "../transform-results/zone-results/useZoneResultsForKey.ts";
+import { ZoneResultsKey } from "../transform-results/zone-results/ZoneResultsContext.ts";
+import {
+  StageConfiguration,
+  ZoneConfiguration,
+} from "../configuration/ConfigurationContext.ts";
 
 export function useZoneResults(timestamp: number) {
   const { stage } = useStage();
   const { zone } = useZone();
 
-  const key: TransformResultsKey = {
+  const key = getZoneResultsKey(stage, zone, timestamp);
+
+  return useZoneResultsForKey(key);
+}
+
+export function getZoneResultsKey(
+  stage: StageConfiguration,
+  zone: ZoneConfiguration,
+  timestamp: number,
+): ZoneResultsKey {
+  return {
     stageId: stage.id,
     zoneId: zone.id,
     timestamp: timestamp,
@@ -18,6 +32,4 @@ export function useZoneResults(timestamp: number) {
       },
     })),
   };
-
-  return useTransformResults(key);
 }

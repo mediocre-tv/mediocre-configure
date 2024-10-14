@@ -17,7 +17,7 @@ export function useCollapseId() {
 }
 
 function collapseId(id: string, otherIds: string[]): string {
-  for (let i = 1; i <= id.length; i++) {
+  for (let i = 4; i <= id.length; i++) {
     const prefix = id.slice(0, i);
     if (
       otherIds

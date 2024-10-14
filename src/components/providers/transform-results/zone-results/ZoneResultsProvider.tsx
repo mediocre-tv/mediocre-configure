@@ -1,29 +1,29 @@
 import { PropsWithChildren, useEffect, useMemo, useState } from "react";
-import {
-  TransformResultOrError,
-  TransformResults,
-  TransformResultsContext,
-  TransformResultsKey,
-} from "./TransformResultsContext.ts";
-import { useGrpcClient } from "../grpc/GrpcContext.ts";
-import { useFrames } from "../frame/useFrames.ts";
+import { useGrpcClient } from "../../grpc/GrpcContext.ts";
+import { useFrames } from "../../frame/useFrames.ts";
 import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
-import { isRpcError } from "../grpc/GrpcHealth.ts";
-import { useConfiguration } from "../configuration/useConfiguration.ts";
+import { isRpcError } from "../../grpc/GrpcHealth.ts";
+import { useConfiguration } from "../../configuration/useConfiguration.ts";
 import {
   BatchTransforms,
   BatchTransformsRequest,
   Transform,
   TransformResponse,
 } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
-import { Frames } from "../frame/FrameContext.ts";
+import { Frames } from "../../frame/FrameContext.ts";
+import {
+  ZoneResultOrError,
+  ZoneResultsContext,
+  ZoneResultsKey,
+  ZoneResultsMap,
+} from "./ZoneResultsContext.ts";
 
-export function TransformResultsProvider({ children }: PropsWithChildren) {
+export function ZoneResultsProvider({ children }: PropsWithChildren) {
   const { frames } = useFrames();
-  const [transformResults, setTransformResults] = useState<TransformResults>(
-    new TransformResults(),
+  const [zoneResults, setZoneResults] = useState<ZoneResultsMap>(
+    new ZoneResultsMap(),
   );
-  const pendingTransformKeys = usePendingTransformKeys(transformResults);
+  const pendingZoneKeys = usePendingZoneKeys(zoneResults);
   const [isTransforming, setIsTransforming] = useState(false); // can we abort instead?
 
   const client = useGrpcClient(TransformServiceClient);
@@ -39,17 +39,17 @@ export function TransformResultsProvider({ children }: PropsWithChildren) {
     setIsTransforming(true);
 
     const onTransformResponses = (
-      key: TransformResultsKey,
+      key: ZoneResultsKey,
       transformResponse: TransformResponse[],
     ) => {
       const results = transformResponse.map(getResultFromResponse);
-      setTransformResults((resultsMap) => {
-        return new TransformResults(resultsMap.set(key, results).entries());
+      setZoneResults((resultsMap) => {
+        return new ZoneResultsMap(resultsMap.set(key, results).entries());
       });
     };
 
-    getTransformResultsMap(
-      pendingTransformKeys,
+    getZoneResultsMap(
+      pendingZoneKeys,
       frames,
       onTransformResponses,
       client,
@@ -60,66 +60,58 @@ export function TransformResultsProvider({ children }: PropsWithChildren) {
     return () => {
       // abortController.abort();
     };
-  }, [pendingTransformKeys, client, frames, transformResults, isTransforming]);
+  }, [pendingZoneKeys, client, frames, zoneResults, isTransforming]);
 
   return (
-    <TransformResultsContext.Provider value={{ transformResults }}>
+    <ZoneResultsContext.Provider value={{ zoneResults }}>
       {children}
-    </TransformResultsContext.Provider>
+    </ZoneResultsContext.Provider>
   );
 }
 
-function usePendingTransformKeys(results: TransformResults) {
+function usePendingZoneKeys(results: ZoneResultsMap) {
   const { zones, regions } = useConfiguration();
 
-  const allTransformKeys = useMemo(() => {
-    const zoneTransforms: TransformResultsKey[] = Array.from(
-      zones.values(),
-    ).flatMap((zone) =>
+  const allZoneResultsKeys = useMemo(() => {
+    const zoneTimestamps = Array.from(zones.values()).flatMap((zone) =>
+      zone.tests.map((test) => test.time),
+    );
+    const regionTimestamps = Array.from(regions.values()).flatMap((region) =>
+      region.tests.map((test) => test.time),
+    );
+    const timestamps = [...new Set([...zoneTimestamps, ...regionTimestamps])];
+
+    return Array.from(zones.values()).flatMap((zone) =>
       zone.stagePaths.flatMap((stagePath) =>
-        zone.tests.map((test) => ({
-          ...stagePath,
-          zoneId: zone.id,
-          timestamp: test.time,
-          transforms: zone.transforms.map((transformation) => ({
-            transformation: {
-              oneofKind: "imageToImage",
-              imageToImage: transformation,
-            },
-          })),
-        })),
+        timestamps.map(
+          (timestamp): ZoneResultsKey => ({
+            ...stagePath,
+            zoneId: zone.id,
+            timestamp: timestamp,
+            transforms: zone.transforms.map((transformation) => ({
+              transformation: {
+                oneofKind: "imageToImage",
+                imageToImage: transformation,
+              },
+            })),
+          }),
+        ),
       ),
     );
-
-    const regionTransforms: TransformResultsKey[] = Array.from(
-      regions.values(),
-    ).flatMap((region) =>
-      region.zonePaths.flatMap((zonePath) =>
-        region.tests.map((test) => ({
-          ...zonePath,
-          regionId: region.id,
-          timestamp: test.time,
-          transforms: region.transforms,
-        })),
-      ),
-    );
-
-    return [...zoneTransforms, ...regionTransforms];
   }, [regions, zones]);
 
-  const pendingTransformKeys = useMemo(() => {
-    return allTransformKeys.filter((key) => !results.has(key));
-  }, [
-    allTransformKeys,
-    results, // results causes this to re-render when it shouldn't
-  ]);
-
-  return pendingTransformKeys;
+  return useMemo(
+    () => allZoneResultsKeys.filter((key) => !results.has(key)),
+    [
+      allZoneResultsKeys,
+      results, // results causes this to re-render when it shouldn't
+    ],
+  );
 }
 
 function getResultFromResponse(
   timedResponse: TransformResponse,
-): TransformResultOrError {
+): ZoneResultOrError {
   const response = timedResponse.response;
   if (response.oneofKind === "error") {
     return { error: response.error, elapsed: timedResponse.elapsed };
@@ -139,23 +131,17 @@ function getResultFromResponse(
           return { error: "No data in image", elapsed: timedResponse.elapsed };
         }
       }
-      case "characters": {
-        return {
-          text: transformed.value.characters,
-          elapsed: timedResponse.elapsed,
-        };
-      }
     }
   }
 
   return { error: "Unknown response", elapsed: timedResponse.elapsed };
 }
 
-async function getTransformResultsMap(
-  keys: TransformResultsKey[],
+async function getZoneResultsMap(
+  keys: ZoneResultsKey[],
   frames: Frames,
   onTransformResponses: (
-    key: TransformResultsKey,
+    key: ZoneResultsKey,
     responses: TransformResponse[],
   ) => void,
   client: TransformServiceClient,
@@ -171,9 +157,7 @@ async function getTransformResultsMap(
     }
 
     const batch: BatchTransforms[] = transformKeys.flatMap((transformKey) => ({
-      id: [transformKey.stageId, transformKey.zoneId, transformKey.regionId]
-        .filter((id) => id)
-        .join(":"),
+      id: [transformKey.stageId, transformKey.zoneId].join(":"),
       transforms: transformKey.transforms,
     }));
 
@@ -193,7 +177,7 @@ async function transformBatch(
   time: number,
   batch: BatchTransforms[],
   onTransformResponses: (
-    key: TransformResultsKey,
+    key: ZoneResultsKey,
     responses: TransformResponse[],
   ) => void,
   client: TransformServiceClient,
@@ -216,12 +200,11 @@ async function transformBatch(
     abort: abortController?.signal,
   });
 
-  const getKey = (id: string, transforms: Transform[]): TransformResultsKey => {
+  const getKey = (id: string, transforms: Transform[]): ZoneResultsKey => {
     const idParts = id.split(":");
     return {
       stageId: idParts[0],
-      zoneId: idParts.at(1),
-      regionId: idParts.at(2),
+      zoneId: idParts[1],
       timestamp: time,
       transforms: transforms,
     };

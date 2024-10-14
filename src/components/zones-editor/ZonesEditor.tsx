@@ -2,15 +2,13 @@ import { useState } from "react";
 import { ZonesEditorSingleFrame } from "./ZonesEditorSingleFrame.tsx";
 import { ZonesEditorAllFrames } from "./ZonesEditorAllFrames.tsx";
 import { Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { useStage } from "../providers/stage/useStage.ts";
-import { useZones } from "../providers/zone/useZones.ts";
+import { useStageZones } from "../providers/zone/useStageZones.ts";
 
 const zonesEditorViews = ["Single Frame", "All Frames"] as const;
 export type ZonesEditorView = (typeof zonesEditorViews)[number];
 
 export function ZonesEditor() {
-  const { stage } = useStage();
-  const { zones } = useZones();
+  const { stage, zones } = useStageZones();
 
   const zonesTimestamps = Array.from(zones.values()).flatMap((zone) =>
     zone.tests.map((test) => test.time),
@@ -44,20 +42,20 @@ export function ZonesEditor() {
 }
 
 interface ZoneEditorViewTogglesProps {
-  zoneView: ZonesEditorView;
-  setZoneView: (view: ZonesEditorView) => void;
+  regionView: ZonesEditorView;
+  setRegionView: (view: ZonesEditorView) => void;
 }
 
 export function ZoneEditorViewToggles({
-  zoneView,
-  setZoneView,
+  regionView,
+  setRegionView,
 }: ZoneEditorViewTogglesProps) {
   return (
     <Box width={1} display={"flex"} justifyContent={"center"}>
       <ToggleButtonGroup
         exclusive
-        value={zoneView}
-        onChange={(_, value) => setZoneView(value)}
+        value={regionView}
+        onChange={(_, value) => setRegionView(value)}
       >
         {zonesEditorViews.map((view) => (
           <ToggleButton key={view} value={view} sx={{ textTransform: "none" }}>

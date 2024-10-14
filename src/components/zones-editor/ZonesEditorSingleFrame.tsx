@@ -6,7 +6,13 @@ import {
 } from "../transform/Transforms.ts";
 import { isImageToImageTransform } from "../transform/Transform.ts";
 import { Rectangles } from "../shapes/Rectangle.tsx";
-import { Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
+import {
+  Button,
+  Stack,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import ImageLabeller from "../image-labeller/ImageLabeller.tsx";
 import { BoxWithHeaderActions } from "../layout/BoxWithHeaderLayout.tsx";
 import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
@@ -15,15 +21,17 @@ import {
   ZoneConfiguration,
   ZoneConfigurations,
 } from "../providers/configuration/ConfigurationContext.ts";
-import { useZones } from "../providers/zone/useZones.ts";
 import { useFrame } from "../providers/frame/useFrame.ts";
 import { useStage } from "../providers/stage/useStage.ts";
 import { ZoneProvider } from "../providers/zone/ZoneProvider.tsx";
 import { useZoneResults } from "../providers/zone/useZoneResults.ts";
 import { useZone } from "../providers/zone/useZone.ts";
-import { TransformResultViewer } from "./TransformResultViewer.tsx";
+import { TransformResultViewer } from "../transform/TransformResultViewer.tsx";
 import { ZoneEditorViewToggles, ZonesEditorView } from "./ZonesEditor.tsx";
 import { getPrettyTime } from "../../utilities/timestamp.ts";
+import { Link } from "react-router-dom";
+import { useCollapseId } from "../providers/hooks/useCollapseId.ts";
+import { useStageZones } from "../providers/zone/useStageZones.ts";
 
 export interface ZonesEditorSingleFrameProps {
   setZoneView: (view: ZonesEditorView) => void;
@@ -193,8 +201,7 @@ function ZonesEditorSingleFrameLeft({
   setZoneView,
 }: ZoneEditorLeftProps) {
   const frame = useFrame(selectedTimestamp);
-  const { stage } = useStage();
-  const { zones, setZones } = useZones();
+  const { stage, zones, setZones } = useStageZones();
 
   const transforms = Array.from(zones)
     .map(([, zone]) => zone)
@@ -216,8 +223,8 @@ function ZonesEditorSingleFrameLeft({
         setRectangles={setRectangles}
       />
       <ZoneEditorViewToggles
-        zoneView={"Single Frame"}
-        setZoneView={setZoneView}
+        regionView={"Single Frame"}
+        setRegionView={setZoneView}
       />
       <ZonesFramesViewer
         timestamps={timestamps}
@@ -233,7 +240,7 @@ interface ZoneEditorRightProps {
 }
 
 function ZonesEditorSingleFrameRight({ timestamp }: ZoneEditorRightProps) {
-  const { zones } = useZones();
+  const { zones } = useStageZones();
   const theme = useTheme();
   const hasLgBreakpoint = useMediaQuery(theme.breakpoints.up("lg"));
 
@@ -262,11 +269,23 @@ interface ZoneEditorBodyProps {
 }
 
 function ZoneEditorBody({ timestamp }: ZoneEditorBodyProps) {
-  const { transformResults } = useZoneResults(timestamp);
+  const { stage } = useStage();
+  const { zone } = useZone();
+  const { results } = useZoneResults(timestamp);
+  const collapseId = useCollapseId();
 
   return (
-    <Stack direction={"row"} justifyContent={"space-between"}>
-      <TransformResultViewer results={transformResults} />
+    <Stack
+      direction={"row"}
+      alignItems={"center"}
+      justifyContent={"space-between"}
+    >
+      <TransformResultViewer results={results} />
+      <Link
+        to={`/stages/${collapseId(stage.id)}/zones/${collapseId(zone.id)}/regions`}
+      >
+        <Button>View Regions</Button>
+      </Link>
     </Stack>
   );
 }
