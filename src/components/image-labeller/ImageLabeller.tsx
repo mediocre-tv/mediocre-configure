@@ -78,7 +78,14 @@ function ScaledImageLabellerWindowContainer({
 
   return (
     // always render the stage container, otherwise we can't dynamically resize the image
-    <Box width={1} height={1} ref={ref} display={"flex"} alignItems={"center"}>
+    <Box
+      width={1}
+      height={1}
+      ref={ref}
+      display={"flex"}
+      justifyContent={"center"}
+      alignItems={"center"}
+    >
       {dimensions && scale && (
         <ScaledImageLabellerWindow
           image={image}
