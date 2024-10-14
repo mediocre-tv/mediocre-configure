@@ -11,8 +11,8 @@ import { isRpcError } from "../../grpc/GrpcHealth.ts";
 import { useConfiguration } from "../../configuration/useConfiguration.ts";
 import {
   BatchTransforms,
-  BatchTransformsRequest,
   Transform,
+  TransformBatchRequest,
   TransformResponse,
 } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
 import { ZoneResultsKey } from "../zone-results/ZoneResultsContext.ts";
@@ -192,7 +192,7 @@ async function transformBatch(
     .then((res) => res.arrayBuffer())
     .then((buffer) => new Uint8Array(buffer));
 
-  const request: BatchTransformsRequest = {
+  const request: TransformBatchRequest = {
     image: {
       blob: {
         data: imageData,
