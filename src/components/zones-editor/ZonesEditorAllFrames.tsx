@@ -2,7 +2,6 @@ import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
 import { useEffect, useState } from "react";
 import { Box, IconButton, Stack, useMediaQuery, useTheme } from "@mui/material";
 import { ZoneProvider } from "../providers/zone/ZoneProvider.tsx";
-import { useZoneResults } from "../providers/zone/useZoneResults.ts";
 import { useConfiguration } from "../providers/configuration/useConfiguration.ts";
 import { TransformResultViewer } from "../transform/TransformResultViewer.tsx";
 import { AddAPhoto } from "@mui/icons-material";
@@ -14,6 +13,7 @@ import { useFrame } from "../providers/frame/useFrame.ts";
 import { useZone } from "../providers/zone/useZone.ts";
 import { getPrettyTime } from "../../utilities/timestamp.ts";
 import { useStageZones } from "../providers/zone/useStageZones.ts";
+import { useZoneResult } from "../providers/zone/useZoneResult.ts";
 
 export interface ZonesEditorAllFramesProps {
   setZoneView: (view: ZonesEditorView) => void;
@@ -167,13 +167,13 @@ interface ZoneFrameTimeViewerProps {
 }
 
 function ZoneFrameTimeViewer({ timestamp, onClick }: ZoneFrameTimeViewerProps) {
-  const { results } = useZoneResults(timestamp);
+  const { result } = useZoneResult(timestamp);
 
   return (
     <Box>
       <TransformResultViewer
+        result={result}
         label={getPrettyTime(timestamp)}
-        results={results}
         onClick={onClick}
       />
     </Box>
@@ -187,13 +187,13 @@ interface ZoneFrameViewerProps {
 
 function ZoneFrameViewer({ timestamp, onClick }: ZoneFrameViewerProps) {
   const { zone } = useZone();
-  const { results } = useZoneResults(timestamp);
+  const { result } = useZoneResult(timestamp);
 
   return (
     <Box>
       <TransformResultViewer
+        result={result}
         label={zone.name}
-        results={results}
         onClick={onClick}
       />
     </Box>

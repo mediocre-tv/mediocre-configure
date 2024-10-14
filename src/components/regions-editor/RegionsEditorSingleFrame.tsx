@@ -296,7 +296,7 @@ function RegionEditorBody({ timestamp }: RegionEditorBodyProps) {
         />
       ) : (
         zoneResult && (
-          <TransformResultViewer label={"Zone Error"} results={[zoneResult]} />
+          <TransformResultViewer label={"Zone Error"} result={zoneResult} />
         )
       )}
     </SkeletonBox>

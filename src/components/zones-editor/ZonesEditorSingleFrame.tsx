@@ -274,13 +274,19 @@ function ZoneEditorBody({ timestamp }: ZoneEditorBodyProps) {
   const { results } = useZoneResults(timestamp);
   const collapseId = useCollapseId();
 
+  // we should be showing all results here
+  const result =
+    results.find((result) => "error" in result) ??
+    results.at(results.length - 1) ??
+    null;
+
   return (
     <Stack
       direction={"row"}
       alignItems={"center"}
       justifyContent={"space-between"}
     >
-      <TransformResultViewer results={results} />
+      <TransformResultViewer result={result} />
       <Link
         to={`/stages/${collapseId(stage.id)}/zones/${collapseId(zone.id)}/regions`}
       >

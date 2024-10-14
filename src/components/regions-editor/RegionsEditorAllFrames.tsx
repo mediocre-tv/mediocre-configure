@@ -2,7 +2,6 @@ import { LongOrSideBySideLayout } from "../layout/LongOrSideBySideLayout.tsx";
 import { useEffect, useState } from "react";
 import { Box, IconButton, Stack, useMediaQuery, useTheme } from "@mui/material";
 import { RegionProvider } from "../providers/region/RegionProvider.tsx";
-import { useRegionResults } from "../providers/region/useRegionResults.ts";
 import { useConfiguration } from "../providers/configuration/useConfiguration.ts";
 import { TransformResultViewer } from "../transform/TransformResultViewer.tsx";
 import { AddAPhoto } from "@mui/icons-material";
@@ -17,6 +16,7 @@ import { useFrame } from "../providers/frame/useFrame.ts";
 import { useRegion } from "../providers/region/useRegion.ts";
 import { getPrettyTime } from "../../utilities/timestamp.ts";
 import { useZoneRegions } from "../providers/region/useZoneRegions.ts";
+import { useRegionResult } from "../providers/region/useRegionResult.ts";
 
 export interface RegionsEditorAllFramesProps {
   setRegionView: (view: RegionsEditorView) => void;
@@ -176,13 +176,13 @@ function RegionFrameTimeViewer({
   timestamp,
   onClick,
 }: RegionFrameTimeViewerProps) {
-  const { results } = useRegionResults(timestamp);
+  const { result } = useRegionResult(timestamp);
 
   return (
     <Box>
       <TransformResultViewer
         label={getPrettyTime(timestamp)}
-        results={results}
+        result={result}
         onClick={onClick}
       />
     </Box>
@@ -196,13 +196,13 @@ interface RegionFrameViewerProps {
 
 function RegionFrameViewer({ timestamp, onClick }: RegionFrameViewerProps) {
   const { region } = useRegion();
-  const { results } = useRegionResults(timestamp);
+  const { result } = useRegionResult(timestamp);
 
   return (
     <Box>
       <TransformResultViewer
         label={region.name}
-        results={results}
+        result={result}
         onClick={onClick}
       />
     </Box>

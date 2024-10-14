@@ -1,11 +1,13 @@
-import { Alert, Stack, Typography } from "@mui/material";
+import { Alert, Box, IconButton, Stack, Typography } from "@mui/material";
 import { SkeletonBox } from "../skeleton/SkeletonBox.tsx";
 import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { TransformResultOrError } from "../providers/transform-results/TransformResults.ts";
+import { EditTransformDialog } from "./EditTransformDialog.tsx";
+import { AddCircleOutlined } from "@mui/icons-material";
 
 interface TransformResultProps {
-  result: TransformResultOrError | undefined;
+  result: TransformResultOrError | null;
 }
 
 export function TransformResult({ result }: TransformResultProps) {
@@ -14,11 +16,22 @@ export function TransformResult({ result }: TransformResultProps) {
       showSkeleton={!result}
       width={200}
       height={200}
-      boxProps={{ padding: 1 }}
+      boxProps={{
+        padding: 1,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
     >
       {result &&
         ("error" in result ? (
-          <Alert severity={"error"}>{result.error}</Alert>
+          <Alert
+            sx={{ height: "100%", width: "100%" }}
+            severity={"error"}
+            icon={false}
+          >
+            {result.error}
+          </Alert>
         ) : "image" in result ? (
           <img
             src={result.image}
@@ -37,22 +50,23 @@ export function TransformResult({ result }: TransformResultProps) {
 }
 
 interface TransformResultViewerProps {
+  result: TransformResultOrError | null;
   label?: string;
-  results: TransformResultOrError[];
   onClick?: () => void;
 }
 
 export function TransformResultViewer({
+  result,
   label,
-  results,
   onClick,
 }: TransformResultViewerProps) {
-  const result =
-    results.find((result) => "error" in result) ??
-    results.at(results.length - 1);
-
   return (
-    <Stack margin={1} width={200} onClick={onClick} sx={{ cursor: "pointer" }}>
+    <Stack
+      margin={1}
+      width={200}
+      onClick={onClick}
+      sx={{ ...(onClick && { cursor: "pointer" }) }}
+    >
       <TransformResult result={result} />
       {label && (
         <Typography textAlign={"center"} paddingBottom={1}>
@@ -93,27 +107,26 @@ export function TransformResultsViewer({
       {transforms.map((transformation, index) => {
         const result = results[index];
         const previousResult =
-          index == 0 ? { result: image, elapsed: 0 } : results[index - 1];
+          index == 0 ? { image: image, elapsed: 0 } : results[index - 1];
 
         return (
           <Fragment key={index}>
-            <TransformResult result={result} />
-            {/*<EditableTransformationResult*/}
-            {/*  transformation={transformation}*/}
-            {/*  result={result}*/}
-            {/*  previousResult={previousResult}*/}
-            {/*  setTransformation={(transformation) =>*/}
-            {/*    setTransformation(transformation, index)*/}
-            {/*  }*/}
-            {/*/>*/}
-            {/*{index < transformations.length - 1 && (*/}
-            {/*  <AddTransformationButton*/}
-            {/*    addTransformation={(transformation) =>*/}
-            {/*      addTransformation(transformation, index)*/}
-            {/*    }*/}
-            {/*    previousResult={result}*/}
-            {/*  />*/}
-            {/*)}*/}
+            <EditableTransformationResult
+              transformation={transformation}
+              result={result}
+              previousResult={previousResult}
+              setTransformation={(transformation) =>
+                setTransformation(transformation, index)
+              }
+            />
+            {index < transforms.length - 1 && (
+              <AddTransformationButton
+                addTransformation={(transformation) =>
+                  addTransformation(transformation, index)
+                }
+                previousResult={result}
+              />
+            )}
           </Fragment>
         );
       })}
@@ -121,161 +134,68 @@ export function TransformResultsViewer({
   );
 }
 
-// function RegionTransformationsBody({
-//   imageData,
-//   transformations,
-//   setTransformations,
-//   results,
-// }: RegionTransformationsBodyProps) {
+interface EditableTransformationResultProps {
+  transformation: Transform;
+  setTransformation: (transformation: Transform) => void;
+  result: TransformResultOrError | null;
+  previousResult: TransformResultOrError | null;
+}
 
-// }
+function EditableTransformationResult({
+  transformation,
+  setTransformation,
+  result,
+  previousResult,
+}: EditableTransformationResultProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  let label: string | undefined;
+  if (transformation.transformation.oneofKind === "imageToImage") {
+    label = transformation.transformation.imageToImage.transformation.oneofKind;
+  } else if (transformation.transformation.oneofKind === "imageToText") {
+    label = transformation.transformation.imageToText.transformation.oneofKind;
+  }
 
-// function TransformationResult({ label, result }: TransformationResultProps) {
-//   const imgRef = useRef<HTMLImageElement>(null);
-//   const [imageDimensions, setImageDimensions] = useState<Dimensions | null>(
-//     null,
-//   );
-//
-//   const timeTaken =
-//     result?.elapsed !== null && result?.elapsed !== undefined
-//       ? result.elapsed.toFixed(3)
-//       : "unknown ";
-//
-//   const footerText = imageDimensions
-//     ? `${imageDimensions.width} x ${imageDimensions.height}`
-//     : "Text";
-//
-//   const imageOrText = result && result.result !== null && (
-//     <Box display={"flex"} width={100} height={100} alignItems={"center"}>
-//       {result.result instanceof Uint8Array ? (
-//         <img
-//           ref={imgRef}
-//           src={URL.createObjectURL(new Blob([result.result]))}
-//           className={styles.image}
-//           onLoad={() => {
-//             if (imgRef.current) {
-//               const newDimensions = {
-//                 width: imgRef.current.naturalWidth,
-//                 height: imgRef.current.naturalHeight,
-//               };
-//               if (
-//                 imageDimensions?.width !== newDimensions.width &&
-//                 imageDimensions?.height !== newDimensions.height
-//               ) {
-//                 setImageDimensions(newDimensions);
-//               }
-//             }
-//           }}
-//         />
-//       ) : (
-//         <Typography
-//           maxHeight={1}
-//           width={1}
-//           overflow={"auto"}
-//           component="div"
-//           align={"center"}
-//         >
-//           {result.result !== "" ? (
-//             result.result
-//           ) : (
-//             <Box sx={{ fontStyle: "italic" }}>Empty</Box>
-//           )}
-//         </Typography>
-//       )}
-//     </Box>
-//   );
-//
-//   return (
-//     <Stack spacing={1}>
-//       <Typography align={"center"}>{label}</Typography>
-//       {result && result.result !== null ? (
-//         <>
-//           {imageOrText}
-//           <Typography align={"center"}>{footerText}</Typography>
-//           <Typography align={"center"}>{timeTaken}ms</Typography>
-//         </>
-//       ) : (
-//         <>
-//           <Skeleton width={100} height={100}></Skeleton>
-//           <Typography align={"center"}>Loading</Typography>
-//         </>
-//       )}
-//     </Stack>
-//   );
-// }
-//
-// interface EditableTransformationResultProps {
-//   transformation: Transform;
-//   setTransformation: (transformation: Transform) => void;
-//   result: TransformResult | null;
-//   previousResult: TransformResult | null;
-// }
-//
-// function EditableTransformationResult({
-//   transformation,
-//   setTransformation,
-//   result,
-//   previousResult,
-// }: EditableTransformationResultProps) {
-//   const [isEditing, setIsEditing] = useState(false);
-//   let label: string | undefined;
-//   if (transformation.transformation.oneofKind === "imageToImage") {
-//     label = transformation.transformation.imageToImage.transformation.oneofKind;
-//   } else if (transformation.transformation.oneofKind === "imageToText") {
-//     label = transformation.transformation.imageToText.transformation.oneofKind;
-//   }
-//
-//   return (
-//     <>
-//       <IconButton onClick={() => setIsEditing(true)} sx={{ borderRadius: 2 }}>
-//         <TransformationResult label={label ?? "Unknown"} result={result} />
-//       </IconButton>
-//       <EditTransformationDialog
-//         transformation={transformation}
-//         setTransformation={setTransformation}
-//         isOpen={isEditing}
-//         onClose={() => setIsEditing(false)}
-//         previousResult={previousResult}
-//       />
-//     </>
-//   );
-// }
-//
-// interface RegionTransformationsBodyProps {
-//   imageData: Uint8Array | null;
-//   transformations: Transform[];
-//   setTransformations: (transformations: Transform[]) => void;
-//   results: TransformResult[];
-// }
-//
+  return (
+    <>
+      <IconButton onClick={() => setIsEditing(true)} sx={{ borderRadius: 2 }}>
+        <TransformResultViewer label={label ?? "Unknown"} result={result} />
+      </IconButton>
+      <EditTransformDialog
+        transformation={transformation}
+        setTransformation={setTransformation}
+        isOpen={isEditing}
+        onClose={() => setIsEditing(false)}
+        previousResult={previousResult}
+      />
+    </>
+  );
+}
 
-//
-// interface AddTransformationButtonProps {
-//   addTransformation: (transformation: Transform) => void;
-//   previousResult: TransformResult | null;
-// }
-//
-// function AddTransformationButton({
-//   addTransformation,
-//   previousResult,
-// }: AddTransformationButtonProps) {
-//   const [isOpen, setIsOpen] = useState(false);
-//   const open = () => setIsOpen(true);
-//   const close = () => setIsOpen(false);
-//
-//   return (
-//     <Box>
-//       <IconButton size="small" onClick={open}>
-//         <AddCircleOutlineOutlinedIcon />
-//       </IconButton>
-//       <EditTransformationDialog
-//         transformation={Transform.create()}
-//         setTransformation={addTransformation}
-//         isOpen={isOpen}
-//         onClose={close}
-//         previousResult={previousResult}
-//       />
-//     </Box>
-//   );
-// }
-//
+interface AddTransformationButtonProps {
+  addTransformation: (transformation: Transform) => void;
+  previousResult: TransformResultOrError | null;
+}
+
+function AddTransformationButton({
+  addTransformation,
+  previousResult,
+}: AddTransformationButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const open = () => setIsOpen(true);
+  const close = () => setIsOpen(false);
+
+  return (
+    <Box>
+      <IconButton size="small" onClick={open}>
+        <AddCircleOutlined />
+      </IconButton>
+      <EditTransformDialog
+        transformation={Transform.create()}
+        setTransformation={addTransformation}
+        isOpen={isOpen}
+        onClose={close}
+        previousResult={previousResult}
+      />
+    </Box>
+  );
+}

@@ -1,33 +1,39 @@
-interface EditTransformationDialogProps {
+import { Transform } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb";
+import { TransformResultOrError } from "../providers/transform-results/TransformResults.ts";
+import { Dialog, DialogContent, DialogTitle, Stack } from "@mui/material";
+import { useGrpcClient } from "../providers/grpc/GrpcContext.ts";
+import { useState } from "react";
+import ProtobufEditor from "../protobuf-editor/ProtobufEditor.tsx";
+import { TransformResultViewer } from "./TransformResultViewer.tsx";
+import { transformSingle } from "./Transform.ts";
+import { TransformServiceClient } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/transform/v1beta/transform_pb.client";
+
+interface EditTransformDialogProps {
   isOpen: boolean;
   transformation: Transform;
   setTransformation: (transformation: Transform) => void;
   onClose: () => void;
-  previousResult: TransformResult | null;
+  previousResult: TransformResultOrError | null;
 }
 
-function EditTransformationDialog({
+export function EditTransformDialog({
   isOpen,
   transformation,
   setTransformation,
   onClose,
   previousResult,
-}: EditTransformationDialogProps) {
+}: EditTransformDialogProps) {
   const transformClient = useGrpcClient(TransformServiceClient);
   const [transformResult, setTransformResult] =
-    useState<TransformResult | null>(null);
+    useState<TransformResultOrError | null>(null);
 
   const onPreview = async (transformation: Transform) => {
-    if (
-      transformClient &&
-      previousResult?.result &&
-      previousResult.result instanceof Uint8Array
-    ) {
+    if (transformClient && previousResult && "image" in previousResult) {
       setTransformResult(null);
       const result = await transformSingle(
-        previousResult.result,
-        transformClient,
+        previousResult.image,
         transformation,
+        transformClient,
       );
       setTransformResult(result);
     }
@@ -39,8 +45,8 @@ function EditTransformationDialog({
       <DialogContent>
         <Stack spacing={2}>
           <Stack direction={"row"} justifyContent={"space-evenly"}>
-            <TransformationResult label="Before" result={previousResult} />
-            <TransformationResult label="After" result={transformResult} />
+            <TransformResultViewer label="Before" result={previousResult} />
+            <TransformResultViewer label="After" result={transformResult} />
           </Stack>
           <ProtobufEditor
             message={Transform.create(transformation)}
