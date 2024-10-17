@@ -21,16 +21,19 @@ function useImageContainer(image: HTMLImageElement): useImageContainerReturns {
   }
 
   let width, height, scale: number;
-  if (image.naturalWidth >= image.naturalHeight) {
-    const ratio = image.naturalWidth / image.naturalHeight;
-    width = containerWidth;
-    height = containerWidth / ratio;
-    scale = width / image.naturalWidth;
-  } else {
-    const ratio = image.naturalHeight / image.naturalWidth;
+
+  const naturalRatio = image.naturalWidth / image.naturalHeight;
+  const widthRatio = containerWidth / image.naturalWidth;
+  const heightRatio = containerHeight / image.naturalHeight;
+
+  if (widthRatio > heightRatio) {
+    width = containerHeight * naturalRatio;
     height = containerHeight;
-    width = containerHeight / ratio;
     scale = height / image.naturalHeight;
+  } else {
+    width = containerWidth;
+    height = containerWidth / naturalRatio;
+    scale = width / image.naturalWidth;
   }
 
   const dimensions = { width, height };
