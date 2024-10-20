@@ -40,6 +40,7 @@ jobs:
             -F "required_contexts[]" \
             -F "auto_merge=false" \
             -F "environment=Preview" \
+            -f "description=Description of this" \
             --jq ".id")
           echo "Deployment id: $id"
           echo "id=$id" >> "$GITHUB_OUTPUT"
@@ -93,5 +94,4 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/${{ env.CONFIGURE_REPOSITORY }}/deployments/${{ steps.deployment.outputs.id }}/statuses \
             -f "state=${{ job.status }}" \
-            -f "environment_url=${{ steps.deploy.outputs.url }}" \
-            -f "description=Deploy vercel to ${{ steps.deploy.outputs.url }}"
+            -f "environment_url=${{ steps.deploy.outputs.url }}"
