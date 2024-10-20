@@ -55,7 +55,7 @@ jobs:
           echo "branch=$service_branch" >> "$GITHUB_OUTPUT"
       - name: Get Service PR
         id: service_pr
-        if: ${{ steps.service_branch.outputs.branch != 'master' }}
+        if: ${{ steps.service_branch.outputs.branch && steps.service_branch.outputs.branch != 'master' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
