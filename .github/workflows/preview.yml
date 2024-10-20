@@ -40,7 +40,6 @@ jobs:
             -F "required_contexts[]" \
             -F "auto_merge=false" \
             -F "environment=Preview" \
-            -f "description=Description of this" \
             --jq ".id")
           echo "Deployment id: $id"
           echo "id=$id" >> "$GITHUB_OUTPUT"
