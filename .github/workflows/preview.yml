@@ -71,7 +71,7 @@ jobs:
       - name: Add GitHub Deployment
         env:
           GH_TOKEN: ${{ github.token }}
-      - run: |
+        run: |
           gh api \
             --method POST \
             -H "Accept: application/vnd.github+json" \
