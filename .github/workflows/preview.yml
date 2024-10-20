@@ -44,4 +44,4 @@ jobs:
           vercel deploy \
             --token=${{ secrets.VERCEL_TOKEN }} \
             --build-env VITE_CLIENT_DOMAIN=preview.mediocre.tv \
-            --build-env VITE_CLIENT_HTTPS_PORT=444
+            --build-env VITE_CLIENT_HTTPS_PORT=${{ steps.service_port.outputs.port }}
