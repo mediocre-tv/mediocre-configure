@@ -4,6 +4,7 @@ env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   SERVICE_NAME: "@buf/broomy_mediocre.community_timostamm-protobuf-ts"
+  SERVICE_REPOSITORY: "obroomhall/mediocre"
 
 on:
   push:
@@ -31,7 +32,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          service_pr=$(gh pr list --head ${{ steps.service_branch.outputs.branch }} --json number --jq ".[0].number")
+          service_pr=$(gh pr list --repo ${{ env.SERVICE_REPOSITORY }} --head ${{ steps.service_branch.outputs.branch }} --json number --jq ".[0].number")
           echo "Service PR: $service_pr"
           service_port=$(printf "1%04d" $service_pr)
           echo "Service port: $service_port"
