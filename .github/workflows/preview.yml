@@ -93,4 +93,5 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/${{ env.CONFIGURE_REPOSITORY }}/deployments/${{ steps.deployment.outputs.id }}/statuses \
             -f "state=${{ job.status }}" \
+            -F "auto_inactive=false" \
             -f "environment_url=${{ steps.deploy.outputs.url }}"
