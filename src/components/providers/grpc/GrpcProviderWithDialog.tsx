@@ -41,7 +41,7 @@ export default function GrpcProviderWithDialog({
         parts={defaultParts}
         setParts={setCustomParts}
       />
-      <GrpcProvider context={context}>{children}</GrpcProvider>
+      {context && <GrpcProvider context={context}>{children}</GrpcProvider>}
     </>
   );
 }
