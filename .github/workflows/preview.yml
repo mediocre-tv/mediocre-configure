@@ -29,7 +29,7 @@ jobs:
         id: service_port
         if: ${{ steps.service_branch.outputs.branch != 'master' }}
         run: |
-          service_pr=$(gh pr list --head $service_branch --json number --jq ".[0].number")
+          service_pr=$(gh pr list --head ${{ steps.service_branch.outputs.branch }} --json number --jq ".[0].number")
           echo "Service PR: $service_pr"
           service_port=$(printf "1%04d" $service_pr)
           echo "Service port: $service_port"
