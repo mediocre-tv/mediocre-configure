@@ -38,7 +38,7 @@ jobs:
             -F "ref={branch}" \
             -F "required_contexts[]" \
             -F "auto_merge=false" \
-            -F "environment={branch}" \
+            -F "environment=Preview" \
             --jq ".id")
           echo "Deployment id: $id"
           echo "id=$id" >> "$GITHUB_OUTPUT"
