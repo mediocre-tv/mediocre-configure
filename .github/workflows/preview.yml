@@ -39,9 +39,9 @@ jobs:
           echo "pr=$service_pr" >> "$GITHUB_OUTPUT"
       - name: Get Service Port
         id: service_port
-        if: ${{ steps.service_pr.outputs.service_pr }}
+        if: ${{ steps.service_pr.outputs.pr }}
         run: |
-          service_port=$(printf "1%04d" ${{ steps.service_pr.outputs.service_pr }})
+          service_port=$(printf "1%04d" ${{ steps.service_pr.outputs.pr }})
           echo "Service port: $service_port"
           echo "port=$service_port" >> "$GITHUB_OUTPUT"
       - name: Pull Vercel Environment Information
@@ -51,6 +51,8 @@ jobs:
         run: |
           branch_sanitized=$(echo ${{ github.ref_name }} | sed 's/[^a-zA-Z0-9]/-/g')
           url=$(echo $branch_sanitized.${{ env.BASE_DEPLOYMENT_URL }})
+          echo "Deployment URL: $url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
       - name: Deploy Project Artifacts to Vercel
         id: deploy
         run: |
