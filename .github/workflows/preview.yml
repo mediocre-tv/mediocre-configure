@@ -49,7 +49,7 @@ jobs:
         id: service_branch
         run: |
           service_branch=$(cat package.json \
-            | grep ${{ env.SERVICE_NAME }} \
+            | grep '"${{ env.SERVICE_NAME }}": "label-' \
             | sed -r 's`^\s+"${{ env.SERVICE_NAME }}": "label-(.+)",$`\1`')
           echo "Service branch: $service_branch"
           echo "branch=$service_branch" >> "$GITHUB_OUTPUT"
