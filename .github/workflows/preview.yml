@@ -46,13 +46,6 @@ jobs:
           echo "port=$service_port" >> "$GITHUB_OUTPUT"
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Get Deployment URL
-        id: deployment_url
-        run: |
-          branch_sanitized=$(echo ${{ github.ref_name }} | sed 's/[^a-zA-Z0-9]/-/g')
-          url=$(echo $branch_sanitized.${{ env.BASE_DEPLOYMENT_URL }})
-          echo "Deployment URL: $url"
-          echo "url=$url" >> "$GITHUB_OUTPUT"
       - name: Deploy Project Artifacts to Vercel
         id: deploy
         run: |
@@ -64,12 +57,6 @@ jobs:
           
           url=$(cat url.txt)
           echo "url=$url" >> "$GITHUB_OUTPUT"
-      - name: Add Vercel Alias
-        run: |
-          vercel alias \
-            --token=${{ secrets.VERCEL_TOKEN }} \
-            ${{ steps.deploy.outputs.url }} \
-            ${{ steps.deployment_url.outputs.url }}
       - name: Add GitHub Deployment
         env:
           GH_TOKEN: ${{ github.token }}
@@ -81,6 +68,6 @@ jobs:
             /repos/${{ env.CONFIGURE_REPOSITORY }}/deployments \
             -f "ref=${{ github.ref_name }}" \
             -f "auto_merge=false" \
-            -f "environment=${{ steps.deployment_url.outputs.url }}" \
+            -f "environment=${{ github.ref_name }}" \
             -f "transient_environment=true" \
-            -f "description=Deploy vercel"
+            -f "description=Deploy vercel to ${{ steps.deploy.outputs.url }}"
