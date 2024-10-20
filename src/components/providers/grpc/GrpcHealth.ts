@@ -28,7 +28,7 @@ export async function checkHealth(parts: GrpcTransportParts) {
   const client = new HealthClient(transport);
 
   try {
-    const { response } = await client.check({ service: "" });
+    const { response } = await client.check({ service: "" }, { timeout: 500 });
     if (response.status === HealthCheckResponse_ServingStatus.SERVING) {
       return {
         isValid: true,
