@@ -22,7 +22,7 @@ jobs:
         run: |
           service_branch=$(cat package.json \
             | grep ${{ env.SERVICE_NAME }} \
-            | sed -r 's/^\s+"${{ env.SERVICE_NAME }}": "label-(.+)",$/\1/')
+            | sed -r 's`^\s+"${{ env.SERVICE_NAME }}": "label-(.+)",$`\1`')
           echo "Service branch: $service_branch"
           echo "branch=$service_branch" >> "$GITHUB_OUTPUT"
       - name: Get Service Port
