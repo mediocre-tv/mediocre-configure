@@ -16,7 +16,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@buf/broomy_mediocre.community_timostamm-protobuf-ts": "label-staging-preview-certs",
+    "@buf/broomy_mediocre.community_timostamm-protobuf-ts": "^2.9.4-20241020135613-7d60cfedce51.4",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@fontsource/roboto": "^5.1.0",
