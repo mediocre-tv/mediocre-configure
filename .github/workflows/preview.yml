@@ -66,8 +66,8 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/${{ env.CONFIGURE_REPOSITORY }}/deployments \
-            -f "ref=${{ github.ref_name }}" \
-            -f "auto_merge=false" \
-            -f "environment=${{ github.ref_name }}" \
-            -f "transient_environment=true" \
+            -F "ref={branch}" \
+            -F "auto_merge=false" \
+            -F "environment={branch}" \
+            -F "transient_environment=true" \
             -f "description=Deploy vercel to ${{ steps.deploy.outputs.url }}"
