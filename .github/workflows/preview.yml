@@ -4,7 +4,9 @@ env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   SERVICE_NAME: "@buf/broomy_mediocre.community_timostamm-protobuf-ts"
-  SERVICE_REPOSITORY: "obroomhall/mediocre"
+  SERVICE_REPOSITORY: "obroomhall/mediocre-service"
+  CONFIGURE_REPOSITORY: "obroomhall/mediocre-configure"
+  BASE_DEPLOYMENT_URL: "configure.mediocre.tv"
 
 on:
   push:
@@ -26,26 +28,57 @@ jobs:
             | sed -r 's`^\s+"${{ env.SERVICE_NAME }}": "label-(.+)",$`\1`')
           echo "Service branch: $service_branch"
           echo "branch=$service_branch" >> "$GITHUB_OUTPUT"
-      - name: Get Service Port
-        id: service_port
+      - name: Get Service PR
+        id: service_pr
         if: ${{ steps.service_branch.outputs.branch != 'master' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           service_pr=$(gh pr list --repo ${{ env.SERVICE_REPOSITORY }} --head ${{ steps.service_branch.outputs.branch }} --json number --jq ".[0].number")
-          if [ -n "$service_pr" ]; then
-              echo "Service PR: $service_pr"
-              service_port=$(printf "1%04d" $service_pr)
-              echo "Service port: $service_port"
-              echo "port=$service_port" >> "$GITHUB_OUTPUT"
-          else
-              echo "No PR found for branch: ${{ steps.service_branch.outputs.branch }}"
-          fi
+          echo "Service PR: $service_pr"
+          echo "pr=$service_pr" >> "$GITHUB_OUTPUT"
+      - name: Get Service Port
+        id: service_port
+        if: ${{ steps.service_pr.outputs.service_pr }}
+        run: |
+          service_port=$(printf "1%04d" ${{ steps.service_pr.outputs.service_pr }})
+          echo "Service port: $service_port"
+          echo "port=$service_port" >> "$GITHUB_OUTPUT"
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Get Deployment URL
+        id: deployment_url
+        run: |
+          branch_sanitized=$(echo ${{ github.ref_name }} | sed 's/[^a-zA-Z0-9]/-/g')
+          url=$(echo $branch_sanitized.${{ env.BASE_DEPLOYMENT_URL }})
       - name: Deploy Project Artifacts to Vercel
+        id: deploy
         run: |
           vercel deploy \
             --token=${{ secrets.VERCEL_TOKEN }} \
             --build-env VITE_CLIENT_DOMAIN=${{ steps.service_port.outputs.port && 'preview.mediocre.tv' || 'client.mediocre.tv' }} \
-            --build-env VITE_CLIENT_HTTPS_PORT=${{ steps.service_port.outputs.port || '443' }}
+            --build-env VITE_CLIENT_HTTPS_PORT=${{ steps.service_port.outputs.port || '443' }} \
+            > url.txt
+          
+          url=$(cat url.txt)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Add Vercel Alias
+        run: |
+          vercel alias \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            ${{ steps.deploy.outputs.url }} \
+            ${{ steps.deployment_url.outputs.url }}
+      - name: Add GitHub Deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ env.CONFIGURE_REPOSITORY }}/deployments \
+            -f "ref=${{ github.ref_name }}" \
+            -f "auto_merge=false" \
+            -f "environment=${{ steps.deployment_url.outputs.url }}" \
+            -f "transient_environment=true" \
+            -f "description=Deploy vercel"
