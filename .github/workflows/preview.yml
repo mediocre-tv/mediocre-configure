@@ -1,0 +1,48 @@
+name: Preview
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  SERVICE_NAME: @buf/broomy_mediocre.community_timostamm-protobuf-ts
+
+on:
+  push:
+    branches-ignore:
+      - master
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Vercel CLI
+        run: npm install --global vercel@canary
+      - name: Get Service Branch
+        id: service_branch
+        run: |
+          service_branch=$(cat package.json \
+            | grep ${{ env.SERVICE_NAME }} \
+            | sed -r 's/^\s+"${{ env.SERVICE_NAME }}": "label-(.+)",$/\1/')
+          echo "Service branch: $service_branch"
+          echo "branch=$service_branch" >> "$GITHUB_OUTPUT"
+      - name: Get Service Port
+        id: service_port
+        run: |
+          if [ "${{ steps.service_branch.outputs.branch }}" = "master" ]; then
+              service_port=443
+          else
+              service_pr=$(gh pr list --head $service_branch --json number --jq ".[0].number")
+              echo "Service PR: $service_pr"
+              service_port=$(printf "1%04d" $service_pr)
+          fi
+          echo "Service port: $service_port"
+          echo "port=$service_port" >> "$GITHUB_OUTPUT"
+      - name: Build Project Artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy Project Artifacts to Vercel
+        run: |
+          vercel deploy \
+            --prebuilt \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --env VITE_CLIENT_DOMAIN=preview.mediocre.tv \
+            --env VITE_CLIENT_HTTPS_PORT=${{ steps.service_port.outputs.port }}
