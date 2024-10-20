@@ -76,8 +76,8 @@ jobs:
         run: |
           vercel deploy \
             --token=${{ secrets.VERCEL_TOKEN }} \
-            --build-env VITE_CLIENT_DOMAIN=${{ steps.service_port.outputs.port && 'preview.mediocre.tv' || 'client.mediocre.tv' }} \
-            --build-env VITE_CLIENT_HTTPS_PORT=${{ steps.service_port.outputs.port || '443' }} \
+            --build-env VITE_CLIENT_DOMAIN=${{ steps.service_port.outputs.port && 'preview.mediocre.tv' || 'staging.mediocre.tv' }} \
+            --build-env VITE_CLIENT_HTTPS_PORT=${{ steps.service_port.outputs.port || '444' }} \
             > url.txt
           
           url=$(cat url.txt)
