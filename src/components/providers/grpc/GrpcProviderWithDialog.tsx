@@ -9,12 +9,13 @@ export interface GrpcTransportParts {
   port: string;
 }
 
+const useHttps = location.protocol === "https:";
+
 const defaultParts: GrpcTransportParts = {
   domain: import.meta.env.VITE_CLIENT_DOMAIN,
-  port:
-    location.protocol === "https:"
-      ? import.meta.env.VITE_CLIENT_HTTPS_PORT
-      : import.meta.env.VITE_CLIENT_HTTP_PORT,
+  port: useHttps
+    ? (import.meta.env.VITE_CLIENT_HTTPS_PORT ?? "443")
+    : (import.meta.env.VITE_CLIENT_HTTP_PORT ?? "80"),
 };
 
 export default function GrpcProviderWithDialog({
@@ -37,7 +38,7 @@ export default function GrpcProviderWithDialog({
     <>
       <GrpcConfigDialog
         open={!defaultPartsValidating && !context}
-        parts={transportParts}
+        parts={defaultParts}
         setParts={setCustomParts}
       />
       <GrpcProvider context={context}>{children}</GrpcProvider>
