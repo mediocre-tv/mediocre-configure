@@ -1,0 +1,68 @@
+name: Deploy
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  CONFIGURE_REPOSITORY: "obroomhall/mediocre-configure"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/deploy.yml
+      - public/**
+      - src/**
+      - index.*
+      - package.json
+      - package-lock.json
+      - vite.config.ts
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Add GitHub Deployment
+        id: deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          id=$(gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ env.CONFIGURE_REPOSITORY }}/deployments \
+            -F "ref={branch}" \
+            -F "required_contexts[]" \
+            -F "auto_merge=false" \
+            -F "environment=Production" \
+            --jq ".id")
+          echo "Deployment id: $id"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+      - name: Install Vercel CLI
+        run: npm install --global vercel@canary
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy Project Artifacts to Vercel
+        id: deploy
+        run: |
+          vercel deploy \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --prod \
+            > url.txt
+          
+          url=$(cat url.txt)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Add GitHub Deployment
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ env.CONFIGURE_REPOSITORY }}/deployments/${{ steps.deployment.outputs.id }}/statuses \
+            -f "state=${{ job.status }}" \
+            -f "environment_url=${{ steps.deploy.outputs.url }}"
