@@ -44,7 +44,7 @@ jobs:
       - name: Deploy Project Artifacts to Vercel
         run: |
           vercel deploy \
-            --env VITE_CLIENT_DOMAIN=preview.mediocre.tv \
-            --env VITE_CLIENT_HTTPS_PORT=${{ steps.service_port.outputs.port }} \
             --prebuilt \
-            --token=${{ secrets.VERCEL_TOKEN }}
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --build-env VITE_CLIENT_DOMAIN=preview.mediocre.tv \
+            --build-env VITE_CLIENT_HTTPS_PORT=${{ steps.service_port.outputs.port }}
