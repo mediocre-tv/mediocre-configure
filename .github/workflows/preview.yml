@@ -13,13 +13,14 @@ on:
     branches-ignore:
       - master
     paths:
-      - .github/workflows/docker.yml
-      - Dockerfile
-      - CMakeLists.txt
-      - grpc/**
-      - mediocre/**
-      - scripts/deploy/**
-      - scripts/run/**
+      - .github/workflows/preview.yml
+      - public/**
+      - src/**
+      - index.*
+      - package.json
+      - package-lock.json
+      - vite.config.ts
+
 jobs:
   preview:
     runs-on: ubuntu-latest
