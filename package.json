@@ -16,7 +16,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@buf/broomy_mediocre.community_timostamm-protobuf-ts": "label-master",
+    "@buf/broomy_mediocre.community_timostamm-protobuf-ts": "label-deploy-scripts",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@fontsource/roboto": "^5.1.0",
