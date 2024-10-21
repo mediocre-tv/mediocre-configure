@@ -4,9 +4,8 @@ env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   SERVICE_NAME: "@buf/broomy_mediocre.community_timostamm-protobuf-ts"
-  SERVICE_REPOSITORY: "obroomhall/mediocre"
-  CONFIGURE_REPOSITORY: "obroomhall/mediocre-configure"
-  BASE_DEPLOYMENT_URL: "configure.mediocre.tv"
+  SERVICE_REPOSITORY: "mediocre-tv/mediocre"
+  CONFIGURE_REPOSITORY: "mediocre-tv/mediocre-configure"
 
 on:
   push:
