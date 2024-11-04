@@ -1,4 +1,4 @@
-name: Preview
+name: Deploy
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -19,7 +19,7 @@ on:
       - vite.config.ts
 
 jobs:
-  preview:
+  deploy:
     runs-on: ubuntu-latest
     permissions:
       deployments: write
