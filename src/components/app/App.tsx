@@ -2,7 +2,6 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-import useLocalState from "../../hooks/UseLocalState.tsx";
 import { GameConfiguration } from "@buf/broomy_mediocre.community_timostamm-protobuf-ts/mediocre/configuration/v1beta/game_pb";
 import { v4 as uuid } from "uuid";
 import {
@@ -18,6 +17,7 @@ import { getRandomTimestamps } from "../video/GrabFrames.ts";
 import { Outlet } from "react-router-dom";
 import { AppLayout } from "./AppLayout.tsx";
 import { ResultsProviders } from "../providers/transform-results/ResultsProvider.tsx";
+import useLocalMessage from "../../hooks/UseLocalMessage.tsx";
 
 function getDefaultGameConfiguration(): GameConfiguration {
   return {
@@ -49,16 +49,16 @@ function getDefaultTestConfiguration(
 }
 
 function App() {
-  const [gameConfiguration, setGameConfiguration] =
-    useLocalState<GameConfiguration>(
-      getDefaultGameConfiguration(),
-      "game-configuration",
-    );
-  const [testConfiguration, setTestConfiguration] =
-    useLocalState<TestConfiguration>(
-      getDefaultTestConfiguration(gameConfiguration),
-      "test-configuration",
-    );
+  const [gameConfiguration, setGameConfiguration] = useLocalMessage(
+    getDefaultGameConfiguration(),
+    GameConfiguration,
+    "game-configuration",
+  );
+  const [testConfiguration, setTestConfiguration] = useLocalMessage(
+    getDefaultTestConfiguration(gameConfiguration),
+    TestConfiguration,
+    "test-configuration",
+  );
 
   return (
     <AppProviders>
